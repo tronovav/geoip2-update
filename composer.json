@@ -1,0 +1,29 @@
+{
+    "name": "tronovav/geoip2-update",
+    "description": "Direct update GeoIP2/GeoLite2 databases from your script, program or via composer.",
+    "keywords": [
+        "geoip",
+        "geoip2",
+        "geolite2",
+        "geolocation",
+        "maxmind"
+    ],
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": ">=5.5",
+        "ext-zlib": "*",
+        "guzzlehttp/guzzle": "^6 || ^7"
+    },
+    "autoload": {
+        "psr-4": {
+            "tronovav\\": "src/"
+        }
+    },
+    "funding": [
+        {
+            "type": "other",
+            "url": "https://yoomoney.ru/to/410016198845596"
+        }
+    ]
+}
