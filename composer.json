@@ -17,7 +17,7 @@
     },
     "autoload": {
         "psr-4": {
-            "tronovav\\": "src/"
+            "tronovav\\GeoIP2Update": "src/"
         }
     },
     "funding": [
