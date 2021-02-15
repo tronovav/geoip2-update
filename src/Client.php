@@ -26,6 +26,13 @@ class Client
     private $updated =[];
     private $errors =[];
 
+    public function __construct($params = [])
+    {
+        foreach ($params as $key => $value)
+            if(property_exists($this, $key))
+                $this->$key = $value;
+    }
+
     /**
      * @return array
      */
@@ -136,9 +143,5 @@ class Client
         }
         fclose($out_file);
         gzclose($file);
-    }
-    public function runConsole(){
-        $this->run();
-        fwrite(\STDOUT, implode("\n",array_merge($this->updated(),$this->errors())));
     }
 }
