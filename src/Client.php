@@ -89,22 +89,14 @@ class Client
     }
 
     private function updateEdition($editionId){
-
-        $query = [
-            'edition_id'=>$editionId,
-            'suffix'=>$this->remoteTypes[$this->type],
-            'license_key' => $this->license_key,
-        ];
-
-        $client = new \GuzzleHttp\Client();
-        $newFileHeaders = $client->head('https://download.maxmind.com/app/geoip_download', [
-            'query' => $query
+        $newFileRequestHeaders = $this->request('HEAD', [
+            'edition_id' => $editionId
         ]);
 
-        preg_match('/filename=(?<attachment>[\w.\d-]+)$/' ,$newFileHeaders->getHeader('Content-Disposition')[0],$matches);
+        preg_match('/filename=(?<attachment>[\w.\d-]+)$/' ,$newFileRequestHeaders['headers']['Content-Disposition'][0],$matches);
         $newFileName = $this->tmpDir.DIRECTORY_SEPARATOR.$matches['attachment'];
 
-        $remoteFileLastModified = (new \DateTime($newFileHeaders->getHeader('Last-Modified')[0]))->getTimestamp();
+        $remoteFileLastModified = (new \DateTime($newFileRequestHeaders['headers']['Last-Modified'][0]))->getTimestamp();
         $oldFileName = $this->dir.DIRECTORY_SEPARATOR.$editionId.'.'.$this->type;
 
         if(!is_file($oldFileName) || $remoteFileLastModified !== filemtime($oldFileName)){
@@ -112,10 +104,13 @@ class Client
             if(is_file($newFileName))
                 unlink($newFileName);
 
-            $client->get('https://download.maxmind.com/app/geoip_download', [
-                'query' => $query,
-                'sink' => $newFileName,
+            $this->request('GET', [
+                'edition_id' => $editionId,
+                'save_to' => $newFileName,
             ]);
+
+            if(!empty($this->errors))
+                return;
 
             if(is_file($oldFileName))
                 unlink($oldFileName);
@@ -168,7 +163,7 @@ class Client
             if(!empty($params['save_to'])){
                 copy( $url, $params['save_to'], $context );
                 return [
-                    'headers' => (array)$http_response_header
+                    'headers' => $this->parseHeaders((array)$http_response_header)
                 ];
             }
             else{
@@ -177,7 +172,7 @@ class Client
                 $responseHeaders = (array)$http_response_header;
                 fclose($stream);
                 return [
-                    'headers' => $responseHeaders,
+                    'headers' => $this->parseHeaders($responseHeaders),
                     'body' => $responseContent
                 ];
             }
@@ -185,5 +180,15 @@ class Client
             $this->errors[] = "{$e->getCode()}: {$e->getMessage()}";
             return false;
         }
+    }
+
+    protected function parseHeaders($lines = [])
+    {
+        $headers = [];
+        foreach ($lines as $line) {
+            $parts = explode(':', $line, 2);
+            $headers[trim($parts[0])][] = isset($parts[1]) ? trim($parts[1]) : null;
+        }
+        return $headers;
     }
 }
