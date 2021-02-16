@@ -23,6 +23,7 @@ class Client
     public $type = 'mmdb';
     public $tmpDir;
 
+    private $urlApi = 'https://download.maxmind.com/app/geoip_download';
     private $updated =[];
     private $errors =[];
 
@@ -143,5 +144,46 @@ class Client
         }
         fclose($out_file);
         gzclose($file);
+    }
+
+    private function request($method,$params = []){
+        $contextOptions = [
+            'http' => [
+                'method' => $method,
+                'ignore_errors' => true,
+            ],
+            'ssl' => [
+                'verify_peer' => false,
+            ],
+        ];
+
+        $url = 'https://download.maxmind.com/app/geoip_download?'.http_build_query([
+                'edition_id'=>!empty($params['edition_id']) ? $params['edition_id'] : '',
+                'suffix'=>$this->remoteTypes[$this->type],
+                'license_key' => $this->license_key,
+            ]);
+
+        try {
+            $context = stream_context_create($contextOptions);
+            if(!empty($params['save_to'])){
+                copy( $url, $params['save_to'], $context );
+                return [
+                    'headers' => (array)$http_response_header
+                ];
+            }
+            else{
+                $stream = fopen($url, 'rb', false, $context);
+                $responseContent = stream_get_contents($stream);
+                $responseHeaders = (array)$http_response_header;
+                fclose($stream);
+                return [
+                    'headers' => $responseHeaders,
+                    'body' => $responseContent
+                ];
+            }
+        } catch (\Exception $e) {
+            $this->errors[] = "{$e->getCode()}: {$e->getMessage()}";
+            return false;
+        }
     }
 }
