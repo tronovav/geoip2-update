@@ -12,8 +12,7 @@
     "license": "MIT",
     "require": {
         "php": ">=5.5",
-        "ext-zlib": "*",
-        "guzzlehttp/guzzle": "^6 || ^7"
+        "ext-zlib": "*"
     },
     "autoload": {
         "psr-4": {
