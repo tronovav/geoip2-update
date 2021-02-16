@@ -1,6 +1,6 @@
 {
     "name": "tronovav/geoip2-update",
-    "description": "Direct update GeoIP2/GeoLite2 databases from your script, program or via composer.",
+    "description": "Update GeoIP2/GeoLite2 databases from your script, program or via composer.",
     "keywords": [
         "geoip",
         "geoip2",
