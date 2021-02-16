@@ -13,25 +13,58 @@ class Client
     public $license_key;
 
     /**
+     * @var string[] Database editions list to update.
+     */
+    public $editions = array(
+        'GeoLite2-ASN',
+        'GeoLite2-City',
+        'GeoLite2-Country',
+    );
+
+    /**
      * @var string Destination directory. Directory where your copies of databases are stored. Your old databases will be updated there.
      */
     public $dir;
+
     /**
      * The type of databases being updated. May be "mmdb" or "csv". If not specified, the mmdb type is the default.
      * @var string
      */
     public $type = 'mmdb';
+
+    /**
+     * Temporary directory for updating. By default the directory obtained by the sys_get_temp_dir() function.
+     * @var string
+     */
     public $tmpDir;
 
     private $urlApi = 'https://download.maxmind.com/app/geoip_download';
-    private $updated =[];
-    private $errors =[];
+    private $updated =array();
+    private $errors =array();
+    private $remoteEditions = array(
+        'GeoLite2-ASN',
+        'GeoIP2-ASN',
 
-    public function __construct($params = [])
+        'GeoLite2-City',
+        'GeoIP2-City',
+
+        'GeoLite2-Country',
+        'GeoIP2-Country',
+    );
+    private $remoteTypes = array(
+        'mmdb' => 'tar.gz',
+        // TODO implement csv extension
+        //'csv' => 'zip',
+    );
+
+    public function __construct($params = array())
     {
+        $thisClass = new \ReflectionClass($this);
         foreach ($params as $key => $value)
-            if(property_exists($this, $key))
+            if($thisClass->hasProperty($key) && $thisClass->getProperty($key)->isPublic())
                 $this->$key = $value;
+            else
+                $this->errors[] = "Parameter \"{$key}\" does not exist.";
     }
 
     /**
@@ -49,23 +82,6 @@ class Client
         return $this->errors;
     }
 
-    private $remoteEditions = [
-        'GeoLite2-ASN',
-        'GeoIP2-ASN',
-
-        'GeoLite2-City',
-        'GeoIP2-City',
-
-        'GeoLite2-Country',
-        'GeoIP2-Country',
-    ];
-
-    private $remoteTypes = [
-        'mmdb' => 'tar.gz',
-        // TODO implement csv extension
-        //'csv' => 'zip',
-    ];
-
     public function run(){
 
         $this->tmpDir = !empty($this->tmpDir) ?$this->tmpDir : sys_get_temp_dir();
@@ -82,19 +98,23 @@ class Client
         if(empty($this->license_key))
             $this->errors[] = "You must specify your license_key https://support.maxmind.com/account-faq/license-keys/where-do-i-find-my-license-key/";
 
+        $editionsForUpdate = array_intersect($this->editions,$this->remoteEditions);
+        if(empty($editionsForUpdate))
+            $this->errors[] = "No revision names are specified for the update.";
+
         if(!empty($this->errors))
             return false;
 
-        foreach ($this->remoteEditions as $remoteEdition){
-            $this->updateEdition($remoteEdition);
+        foreach ($editionsForUpdate as $edition){
+            $this->updateEdition($edition);
         }
         return true;
     }
 
     private function updateEdition($editionId){
-        $newFileRequestHeaders = $this->request([
+        $newFileRequestHeaders = $this->request(array(
             'edition_id' => $editionId
-        ]);
+        ));
 
         if(empty($newFileRequestHeaders['content-disposition'])){
             $this->errors[] = "{$editionId}.{$this->type} not found in maxmind.com";
@@ -103,7 +123,7 @@ class Client
         preg_match('/filename=(?<attachment>[\w.\d-]+)$/' ,$newFileRequestHeaders['content-disposition'][0],$matches);
         $newFileName = $this->tmpDir.DIRECTORY_SEPARATOR.$matches['attachment'];
 
-        $remoteFileLastModified = (new \DateTime($newFileRequestHeaders['last-modified'][0]))->getTimestamp();
+        $remoteFileLastModified = date_create($newFileRequestHeaders['last-modified'][0])->getTimestamp();
         $oldFileName = $this->dir.DIRECTORY_SEPARATOR.$editionId.'.'.$this->type;
 
         if(!is_file($oldFileName) || $remoteFileLastModified !== filemtime($oldFileName)){
@@ -111,10 +131,10 @@ class Client
             if(is_file($newFileName))
                 unlink($newFileName);
 
-            $this->request([
+            $this->request(array(
                 'edition_id' => $editionId,
                 'save_to' => $newFileName,
-            ]);
+            ));
 
             if(is_file($oldFileName))
                 unlink($oldFileName);
@@ -149,12 +169,12 @@ class Client
      * @param array $params
      * @return array|void
      */
-    private function request($params = []){
-        $url = $this->urlApi.'?'.http_build_query([
+    private function request($params = array()){
+        $url = $this->urlApi.'?'.http_build_query(array(
                 'edition_id'=>!empty($params['edition_id']) ? $params['edition_id'] : '',
                 'suffix'=>$this->remoteTypes[$this->type],
                 'license_key' => $this->license_key,
-            ]);
+            ));
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -179,10 +199,14 @@ class Client
         }
     }
 
+    /**
+     * @param $header
+     * @return array
+     */
     protected function parseHeaders($header)
     {
         $lines = explode("\n",$header);
-        $headers = [];
+        $headers = array();
         foreach ($lines as $line) {
             $parts = explode(':', $line, 2);
             $headers[strtolower(trim($parts[0]))][] = isset($parts[1]) ? trim($parts[1]) : null;
