@@ -6,7 +6,7 @@ namespace tronovav\GeoIP2Update;
 
 class ComposerClient
 {
-    public static function up($event){
+    public static function run($event){
         $extra = $event->getComposer()->getPackage()->getExtra();
         $params = isset($extra[__METHOD__]) ? $extra[__METHOD__] : [];
         $client = new Client($params);

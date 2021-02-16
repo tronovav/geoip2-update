@@ -23,8 +23,16 @@ class Client
     public $type = 'mmdb';
     public $tmpDir;
 
+    private $urlApi = 'https://download.maxmind.com/app/geoip_download';
     private $updated =[];
     private $errors =[];
+
+    public function __construct($params = [])
+    {
+        foreach ($params as $key => $value)
+            if(property_exists($this, $key))
+                $this->$key = $value;
+    }
 
     /**
      * @return array
@@ -60,7 +68,7 @@ class Client
 
     public function run(){
 
-        $this->tmpDir = $this->tmpDir ?: sys_get_temp_dir();
+        $this->tmpDir = !empty($this->tmpDir) ?$this->tmpDir : sys_get_temp_dir();
 
         if(!is_dir($this->tmpDir) || !is_writable($this->tmpDir))
             $this->errors[] = sprintf("Temporary directory %s.",(empty($this->tmpDir) ? "not specified" : "{$this->tmpDir} is not writable"));
@@ -70,6 +78,9 @@ class Client
 
         if(empty($this->type) || !array_key_exists($this->type,$this->remoteTypes))
             $this->errors[] = sprintf("Database type %s.",(empty($this->type) ? "not specified" : "$this->type does not exist"));
+
+        if(empty($this->license_key))
+            $this->errors[] = "You must specify your license_key https://support.maxmind.com/account-faq/license-keys/where-do-i-find-my-license-key/";
 
         if(!empty($this->errors))
             return false;
@@ -81,22 +92,18 @@ class Client
     }
 
     private function updateEdition($editionId){
-
-        $query = [
-            'edition_id'=>$editionId,
-            'suffix'=>$this->remoteTypes[$this->type],
-            'license_key' => $this->license_key,
-        ];
-
-        $client = new \GuzzleHttp\Client();
-        $newFileHeaders = $client->head('https://download.maxmind.com/app/geoip_download', [
-            'query' => $query
+        $newFileRequestHeaders = $this->request([
+            'edition_id' => $editionId
         ]);
 
-        preg_match('/filename=(?<attachment>[\w.\d-]+)$/' ,$newFileHeaders->getHeader('Content-Disposition')[0],$matches);
+        if(empty($newFileRequestHeaders['content-disposition'])){
+            $this->errors[] = "{$editionId}.{$this->type} not found in maxmind.com";
+            return;
+        }
+        preg_match('/filename=(?<attachment>[\w.\d-]+)$/' ,$newFileRequestHeaders['content-disposition'][0],$matches);
         $newFileName = $this->tmpDir.DIRECTORY_SEPARATOR.$matches['attachment'];
 
-        $remoteFileLastModified = (new \DateTime($newFileHeaders->getHeader('Last-Modified')[0]))->getTimestamp();
+        $remoteFileLastModified = (new \DateTime($newFileRequestHeaders['last-modified'][0]))->getTimestamp();
         $oldFileName = $this->dir.DIRECTORY_SEPARATOR.$editionId.'.'.$this->type;
 
         if(!is_file($oldFileName) || $remoteFileLastModified !== filemtime($oldFileName)){
@@ -104,9 +111,9 @@ class Client
             if(is_file($newFileName))
                 unlink($newFileName);
 
-            $client->get('https://download.maxmind.com/app/geoip_download', [
-                'query' => $query,
-                'sink' => $newFileName,
+            $this->request([
+                'edition_id' => $editionId,
+                'save_to' => $newFileName,
             ]);
 
             if(is_file($oldFileName))
@@ -115,10 +122,10 @@ class Client
             $this->gz_unpack($newFileName,$oldFileName);
             touch($oldFileName,$remoteFileLastModified);
             unlink($newFileName);
-            $this->updated[] = "The $editionId.{$this->type} file has been updated.";
+            $this->updated[] = "$editionId.{$this->type} has been updated.";
         }
         else
-            $this->updated[] = "The $editionId.{$this->type} file does not need to be updated.";
+            $this->updated[] = "$editionId.{$this->type} does not need to be updated.";
     }
 
     private function gz_unpack($inPath, $outPath)
@@ -137,8 +144,50 @@ class Client
         fclose($out_file);
         gzclose($file);
     }
-    public function runConsole(){
-        $this->run();
-        fwrite(\STDOUT, implode("\n",array_merge($this->updated(),$this->errors())));
+
+    /**
+     * @param array $params
+     * @return array|void
+     */
+    private function request($params = []){
+        $url = $this->urlApi.'?'.http_build_query([
+                'edition_id'=>!empty($params['edition_id']) ? $params['edition_id'] : '',
+                'suffix'=>$this->remoteTypes[$this->type],
+                'license_key' => $this->license_key,
+            ]);
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+
+        if(!empty($params['save_to'])){
+            curl_setopt($ch, CURLOPT_HTTPGET, true);
+            curl_setopt($ch, CURLOPT_BINARYTRANSFER, true);
+            curl_setopt($ch, CURLOPT_HEADER, false);
+            $fh = fopen($params['save_to'], 'w');
+            curl_setopt($ch, CURLOPT_FILE, $fh);
+            curl_exec($ch);
+            curl_close($ch);
+            fclose($fh);
+        }
+        else{
+            curl_setopt($ch, CURLOPT_HEADER, true);
+            curl_setopt($ch, CURLOPT_NOBODY, true);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $header = curl_exec($ch);
+            curl_close($ch);
+            return $this->parseHeaders($header);
+        }
     }
+
+    protected function parseHeaders($header)
+    {
+        $lines = explode("\n",$header);
+        $headers = [];
+        foreach ($lines as $line) {
+            $parts = explode(':', $line, 2);
+            $headers[strtolower(trim($parts[0]))][] = isset($parts[1]) ? trim($parts[1]) : null;
+        }
+        return $headers;
+    }
+
 }

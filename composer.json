@@ -1,6 +1,6 @@
 {
     "name": "tronovav/geoip2-update",
-    "description": "Direct update GeoIP2/GeoLite2 databases from your script, program or via composer.",
+    "description": "Update GeoIP2/GeoLite2 databases from your script, program or via composer.",
     "keywords": [
         "geoip",
         "geoip2",
@@ -11,9 +11,9 @@
     "type": "library",
     "license": "MIT",
     "require": {
-        "php": ">=5.5",
+        "php": ">=5.2.1",
         "ext-zlib": "*",
-        "guzzlehttp/guzzle": "^6 || ^7"
+        "ext-curl": "*"
     },
     "autoload": {
         "psr-4": {
