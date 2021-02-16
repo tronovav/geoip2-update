@@ -11,8 +11,9 @@
     "type": "library",
     "license": "MIT",
     "require": {
-        "php": ">=5.5",
-        "ext-zlib": "*"
+        "php": ">=5.2.1",
+        "ext-zlib": "*",
+        "ext-curl": "*"
     },
     "autoload": {
         "psr-4": {
