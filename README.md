@@ -48,7 +48,7 @@ Each time the `composer update` command is invoked, the library will check for u
 Parameters in the `extra` section:
 
 - `MAXMIND_LICENSE_KEY` (required) - You can see your license key information on [your account License Keys page](https://www.maxmind.com/en/accounts/current/license-key) at maxmind.com.
-- `DESTINATION_DIRECTORY_PATH` (required) - Path to Geoip2 database storage directory.
+- `DESTINATION_DIRECTORY_PATH` (required) - Path to the Geoip2 databases local storage directory.
 
 #### Extended configuration:
 
