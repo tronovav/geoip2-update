@@ -18,6 +18,6 @@ class ComposerClient
         $params = isset($extra[__METHOD__]) ? $extra[__METHOD__] : array();
         $client = new Client($params);
         $client->run();
-        fwrite(\STDOUT, implode("\n",array_merge($client->updated(),$client->errors())));
+        fwrite(\STDOUT, implode(PHP_EOL,array_merge($client->updated(),$client->errors())).PHP_EOL);
     }
 }
