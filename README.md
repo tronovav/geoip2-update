@@ -1,5 +1,5 @@
-<h1 style="text-align: center">Geoip2 Update</h1>
-<p style="text-align: center">Update Maxmind  GeoLite2 and GeoIP2 databases from your php script, program or via composer.</p>
+# Geoip2 Update
+Update Maxmind  GeoLite2 and GeoIP2 databases from your php script, program or via Composer.
 
 [![Latest Stable Version](https://img.shields.io/packagist/v/tronovav/geoip2-update.svg)](https://packagist.org/packages/tronovav/geoip2-update)
 [![GitHub downloads](https://img.shields.io/packagist/dt/tronovav/geoip2-update)](https://packagist.org/packages/tronovav/geoip2-update)
@@ -26,14 +26,15 @@ CONFIGURATION
 
 ### 1. Updating databases via Composer
 
-To update Geoip2 databases via composer, you can set up an update call in your `composer.json`.
+To update Geoip2 databases via Composer, you can set up an update call in your `composer.json`.
 Each time the `composer update` command is invoked, the library will check for updates on the "maxmind.com" server and update the Geoip2 databases if necessary.
 
 
 #### Basic configuration:
+
 ```
 # composer.json
-...
+
 "scripts": {
         "post-update-cmd": "tronovav\\GeoIP2Update\\ComposerClient::run"
 },
@@ -42,19 +43,18 @@ Each time the `composer update` command is invoked, the library will check for u
         "license_key": "MAXMIND_LICENSE_KEY",
         "dir": "DESTINATION_DIRECTORY_PATH"
     }
-},
-...
+}
 ```
 Parameters in the `extra` section:
 
-- `MAXMIND_LICENSE_KEY` (required) - You can see your license key information on [your account License Keys page](https://www.maxmind.com/en/accounts/current/license-key) at maxmind.com.
+- `MAXMIND_LICENSE_KEY` (required) - You can see your license key information on [your account License Keys page](https://support.maxmind.com/account-faq/license-keys/where-do-i-find-my-license-key/) at maxmind.com.
 - `DESTINATION_DIRECTORY_PATH` (required) - Path to the Geoip2 databases local storage directory.
 
 #### Extended configuration:
 
 ```
 # composer.json
-...
+
 "scripts": {
         "post-update-cmd": "tronovav\\GeoIP2Update\\ComposerClient::run"
 },
@@ -70,8 +70,7 @@ Parameters in the `extra` section:
         ],
         "type": "mmdb"
     }
-},
-...
+}
 ```
 
 Additional parameters in the `extra` section:
