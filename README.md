@@ -79,8 +79,8 @@ Additional parameters in the `extra` section:
 
 ```php
 $client = new \tronovav\GeoIP2Update\Client(array(
-    'license_key' => 'MAXMIND_LICENSE_KEY',
-    'dir' => 'DESTINATION_DIRECTORY_PATH',
+    'license_key' => 'MAXMIND_LICENSE_KEY (required)',
+    'dir' => 'DESTINATION_DIRECTORY_PATH (required)',
     'editions' => array('GeoLite2-ASN', 'GeoLite2-City', 'GeoLite2-Country'),
     'type' => 'mmdb',
 ));
