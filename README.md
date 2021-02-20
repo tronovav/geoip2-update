@@ -64,11 +64,7 @@ Parameters in the `extra` section:
         "license_key": "MAXMIND_LICENSE_KEY",
         "dir": "DESTINATION_DIRECTORY_PATH",
 
-        "editions": [
-            "GeoLite2-ASN",
-            "GeoLite2-City",
-            "GeoLite2-Country",
-        ],
+        "editions": ["GeoLite2-ASN", "GeoLite2-City", "GeoLite2-Country"],
         "type": "mmdb"
     }
 }
