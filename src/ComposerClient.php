@@ -1,5 +1,13 @@
 <?php
 
+/*
+ * This file is part of tronovav\GeoIP2Update.
+ *
+ * (c) Andrey Tronov
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
 namespace tronovav\GeoIP2Update;
 
@@ -11,6 +19,7 @@ namespace tronovav\GeoIP2Update;
 class ComposerClient
 {
     /**
+     * Database update launcher.
      * @param \Composer\Script\Event $event
      */
     public static function run(\Composer\Script\Event $event){

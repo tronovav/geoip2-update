@@ -1,8 +1,20 @@
 <?php
 
+/*
+ * This file is part of tronovav\GeoIP2Update.
+ *
+ * (c) Andrey Tronov
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
 namespace tronovav\GeoIP2Update;
 
+/**
+ * Class Client
+ * @package tronovav\GeoIP2Update
+ */
 class Client
 {
 
@@ -82,6 +94,9 @@ class Client
         return $this->errors;
     }
 
+    /**
+     * Database update launcher.
+     */
     public function run(){
 
         $this->tmpDir = !empty($this->tmpDir) ?$this->tmpDir : sys_get_temp_dir();
@@ -103,12 +118,11 @@ class Client
             $this->errors[] = "No revision names are specified for the update.";
 
         if(!empty($this->errors))
-            return false;
+            return;
 
         foreach ($editionsForUpdate as $edition){
             $this->updateEdition($edition);
         }
-        return true;
     }
 
     private function updateEdition($editionId){
@@ -151,7 +165,7 @@ class Client
     private function gz_unpack($inPath, $outPath)
     {
         // Raising this value may increase performance
-        $buffer_size = 1048576; // read 4kb at a time
+        $buffer_size = 1048576; // read 1M at a time
         // Open our files (in binary mode)
         $file = gzopen($inPath, 'rb');
         $out_file = fopen($outPath, 'wb');
@@ -200,10 +214,10 @@ class Client
     }
 
     /**
-     * @param $header
+     * @param string $header
      * @return array
      */
-    protected function parseHeaders($header)
+    private function parseHeaders($header)
     {
         $lines = explode("\n",$header);
         $headers = array();
@@ -213,5 +227,4 @@ class Client
         }
         return $headers;
     }
-
 }
