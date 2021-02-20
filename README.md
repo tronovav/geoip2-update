@@ -75,14 +75,14 @@ Additional parameters in the `extra` section:
 - `editions` - List of database editions that you want to update. Maxmind.com offers databases for free download: `GeoLite2-ASN`, `GeoLite2-City`, `GeoLite2-Country`. These editions will be updated by default if you do not fill in the `editions` parameter. Otherwise, only the editions that you specified will be updated. See available editions in your maxmind.com account.
 - `type` - Geoip2 database editions type. Currently, only the binary type `mmdb` is available for updating. Therefore, this parameter can be omitted.
 
-### 1. Updating databases from your application
+### 2. Updating databases from your application
 
 ```php
 $client = new \tronovav\GeoIP2Update\Client(array(
-    'license_key' => 'MAXMIND_LICENSE_KEY',
-    'dir' => 'DESTINATION_DIRECTORY_PATH',
-    'editions' => array("GeoLite2-ASN", "GeoLite2-City", "GeoLite2-Country"),
-    'type' => 'mmdb'
+    'license_key' => 'MAXMIND_LICENSE_KEY (required)',
+    'dir' => 'DESTINATION_DIRECTORY_PATH (required)',
+    'editions' => array('GeoLite2-ASN', 'GeoLite2-City', 'GeoLite2-Country'),
+    'type' => 'mmdb',
 ));
 $client->run();
 ```
@@ -98,4 +98,4 @@ Update errors:
 ```php
 print_r($client->errors());
 ```
-If there were no update errors, then calling `print_r($ client-> errors ());` will return an empty array.
+If there were no update errors, then calling `print_r($client->errors());` will return an empty array.
