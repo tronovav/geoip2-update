@@ -89,19 +89,23 @@ $client = new \tronovav\GeoIP2Update\Client(array(
     'editions' => array('GeoLite2-ASN', 'GeoLite2-City', 'GeoLite2-Country'),
     'type' => 'mmdb',
 ));
-
 // run update
 $client->run();
 
 // After updating, you can get information about the result:
 
-// update result
-print_r($client->updated());
+print_r($client->updated()); // update result
 
-// update errors
-print_r($client->errors());
+print_r($client->errors()); // update errors
 ```
 
 The description of the constructor parameters can be seen above.
 
 If there were no update errors, then calling `print_r($client->errors());` will return an empty array.
+
+COPYRIGHT AND LICENSE
+---------------------
+
+This software is Copyright (c) 2021 by Andrey Tronov.
+
+This is free software, licensed under the MIT License.
