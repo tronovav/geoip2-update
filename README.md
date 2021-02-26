@@ -46,6 +46,10 @@ Each time the `composer update` command is invoked, the library will check for u
 }
 ```
 
+Parameters in the `scripts` section:
+
+Just add the `post-update-cmd` line to update databases via Composer.
+
 Parameters in the `extra` section:
 
 - `license_key` (required) - You can see your license key information on [your account License Keys page](https://support.maxmind.com/account-faq/license-keys/where-do-i-find-my-license-key/) at maxmind.com.
