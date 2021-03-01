@@ -46,6 +46,10 @@ Each time the `composer update` command is invoked, the library will check for u
 }
 ```
 
+Parameters in the `scripts` section:
+
+Just add the `post-update-cmd` line to update databases via Composer.
+
 Parameters in the `extra` section:
 
 - `license_key` (required) - You can see your license key information on [your account License Keys page](https://support.maxmind.com/account-faq/license-keys/where-do-i-find-my-license-key/) at maxmind.com.
@@ -74,7 +78,8 @@ Parameters in the `extra` section:
 
 Additional parameters in the `extra` section:
 
-- `license_key` (required) - You can see your license key information on [your account License Keys page](https://support.maxmind.com/account-faq/license-keys/where-do-i-find-my-license-key/) at maxmind.com.
+- `license_key` (required) - The same as in the description of the basic configuration.
+- `dir` (required) - The same as in the description of the basic configuration.
 - `editions` - List of database editions that you want to update. Maxmind.com offers databases for free download: `GeoLite2-ASN`, `GeoLite2-City`, `GeoLite2-Country`. These editions will be updated by default if you do not fill in the `editions` parameter. Otherwise, only the editions that you specified will be updated. See available editions in your maxmind.com account.
 - `type` - Geoip2 database editions type. Currently, only the binary type `mmdb` is available for updating. Therefore, this parameter can be omitted.
 
