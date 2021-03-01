@@ -138,9 +138,13 @@ class Client
         $newFileName = $this->tmpDir.DIRECTORY_SEPARATOR.$matches['attachment'];
 
         $remoteFileLastModified = date_create($newFileRequestHeaders['last-modified'][0])->getTimestamp();
+        $localFileLastModified =
+            is_file($this->dir.DIRECTORY_SEPARATOR.$editionId.'.'.$this->type.'.last-modified') ?
+                (int)file_get_contents($this->dir.DIRECTORY_SEPARATOR.$editionId.'.'.$this->type.'.last-modified') : 0;
+
         $oldFileName = $this->dir.DIRECTORY_SEPARATOR.$editionId.'.'.$this->type;
 
-        if(!is_file($oldFileName) || $remoteFileLastModified !== filemtime($oldFileName)){
+        if(!is_file($oldFileName) || $remoteFileLastModified !== $localFileLastModified){
 
             if(is_file($newFileName))
                 unlink($newFileName);
@@ -154,7 +158,7 @@ class Client
                 unlink($oldFileName);
 
             $this->gz_unpack($newFileName,$oldFileName);
-            touch($oldFileName,$remoteFileLastModified);
+            file_put_contents($this->dir.DIRECTORY_SEPARATOR.$editionId.'.'.$this->type.'.last-modified',$remoteFileLastModified);
             unlink($newFileName);
             $this->updated[] = "$editionId.{$this->type} has been updated.";
         }
