@@ -7,7 +7,7 @@ Update Maxmind  GeoLite2 and GeoIP2 databases from your php script, program or v
 REQUIREMENTS
 ------------
 
-The minimum requirement by this library that your Web server supports PHP >= 5.3.0 with curl and zlib libraries.
+The minimum requirement by this library that your Web server supports PHP >= 5.3.0 with curl library.
 
 INSTALLATION
 ------------
