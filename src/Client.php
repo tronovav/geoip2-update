@@ -154,33 +154,25 @@ class Client
                 'save_to' => $newFileName,
             ));
 
-            if(is_file($oldFileName))
-                unlink($oldFileName);
+            $phar = new \PharData($newFileName);
+            $phar->extractTo($this->tmpDir, null, true);
 
-            $this->gz_unpack($newFileName,$oldFileName);
-            file_put_contents($this->dir.DIRECTORY_SEPARATOR.$editionId.'.'.$this->type.'.last-modified',$remoteFileLastModified);
+            $iterator = new \FilesystemIterator(substr($newFileName,0,-7));
+
+            foreach ($iterator as $fileIterator)
+                if($fileIterator->isFile() && $fileIterator->getExtension() === $this->type)
+                    rename($fileIterator->getPathname(),$this->dir.DIRECTORY_SEPARATOR.$fileIterator->getFilename());
+                else
+                    unlink($fileIterator->getPathname());
+
+            rmdir($iterator->getPath());
             unlink($newFileName);
+
+            file_put_contents($this->dir.DIRECTORY_SEPARATOR.$editionId.'.'.$this->type.'.last-modified',$remoteFileLastModified);
             $this->updated[] = "$editionId.{$this->type} has been updated.";
         }
         else
             $this->updated[] = "$editionId.{$this->type} does not need to be updated.";
-    }
-
-    private function gz_unpack($inPath, $outPath)
-    {
-        // Raising this value may increase performance
-        $buffer_size = 1048576; // read 1M at a time
-        // Open our files (in binary mode)
-        $file = gzopen($inPath, 'rb');
-        $out_file = fopen($outPath, 'wb');
-        // Keep repeating until the end of the input file
-        while (!gzeof($file)) {
-            // Read buffer-size bytes
-            // Both fwrite and gzread and binary-safe
-            fwrite($out_file, gzread($file, $buffer_size));
-        }
-        fclose($out_file);
-        gzclose($file);
     }
 
     /**
