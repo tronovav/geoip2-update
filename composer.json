@@ -12,7 +12,6 @@
     "license": "MIT",
     "require": {
         "php": ">=5.3.0",
-        "ext-zlib": "*",
         "ext-curl": "*"
     },
     "autoload": {
