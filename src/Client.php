@@ -1,5 +1,4 @@
 <?php
-
 /*
  * This file is part of tronovav\GeoIP2Update.
  *
@@ -102,6 +101,9 @@ class Client
     public function run()
     {
 
+        if(!empty($this->errors))
+            return;
+
         $this->tmpDir = !empty($this->tmpDir) ? $this->tmpDir : sys_get_temp_dir();
 
         if (!is_dir($this->tmpDir) || !is_writable($this->tmpDir))
@@ -128,6 +130,9 @@ class Client
         }
     }
 
+    /**
+     * @param string $editionId
+     */
     private function updateEdition($editionId)
     {
         $newFileRequestHeaders = $this->request(array(
