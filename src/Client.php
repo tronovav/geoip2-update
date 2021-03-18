@@ -67,6 +67,7 @@ class Client
         // TODO implement csv extension
         //'csv' => 'zip',
     );
+    private $lastModifiedStorageFileName = 'geoip2.last-modified';
 
     public function __construct($params = array())
     {
@@ -144,16 +145,12 @@ class Client
             return;
         }
         preg_match('/filename=(?<attachment>[\w.\d-]+)$/', $newFileRequestHeaders['content-disposition'][0], $matches);
+
         $newFileName = $this->tmpDir . DIRECTORY_SEPARATOR . $matches['attachment'];
-
-        $remoteFileLastModified = date_create($newFileRequestHeaders['last-modified'][0])->getTimestamp();
-        $localFileLastModified =
-            is_file($this->dir . DIRECTORY_SEPARATOR . $editionId . '.' . $this->type . '.last-modified') ?
-                (int)file_get_contents($this->dir . DIRECTORY_SEPARATOR . $editionId . '.' . $this->type . '.last-modified') : 0;
-
         $oldFileName = $this->dir . DIRECTORY_SEPARATOR . $editionId . '.' . $this->type;
+        $remoteFileLastModified = date_create($newFileRequestHeaders['last-modified'][0])->getTimestamp();
 
-        if (!is_file($oldFileName) || $remoteFileLastModified !== $localFileLastModified) {
+        if (!is_file($oldFileName) || $remoteFileLastModified !== $this->getLocalLastModifed($editionId)) {
 
             if (is_file($newFileName))
                 unlink($newFileName);
@@ -177,7 +174,7 @@ class Client
             rmdir($iterator->getPath());
             unlink($newFileName);
 
-            file_put_contents($this->dir . DIRECTORY_SEPARATOR . $editionId . '.' . $this->type . '.last-modified', $remoteFileLastModified);
+            $this->setLastModified($editionId,$remoteFileLastModified);
             $this->updated[] = "$editionId.{$this->type} has been updated.";
         } else
             $this->updated[] = "$editionId.{$this->type} does not need to be updated.";
@@ -235,5 +232,43 @@ class Client
             $headers[strtolower(trim($parts[0]))][] = isset($parts[1]) ? trim($parts[1]) : null;
         }
         return $headers;
+    }
+
+    /**
+     * @param string $editionId
+     * @return int
+     */
+    private function getLocalLastModifed($editionId){
+        $lastModified = 0;
+        foreach ($this->getlastModifiedsArray() as $lastModifiedEdition){
+            preg_match('/^'.$editionId.':(?P<last_modified>[\d]{10})$/i',$lastModifiedEdition,$matches);
+            if(!empty($matches) && ($lastModified = $matches['last_modified'] ?: 0))
+                break;
+        }
+        return (int)$lastModified;
+    }
+
+    /**
+     * @param string $edition
+     * @param int $time
+     */
+    private function setLastModified($edition, $time){
+        $lastModifiedRecord = $edition.':'.$time;
+        $outArray = array($lastModifiedRecord);
+
+        $lastModifiedsArray = is_file($this->dir . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName) ?
+            file($this->dir . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) : array();
+
+        foreach ($lastModifiedsArray  as $lastModifiedOldRecord)
+            if($lastModifiedOldRecord != $lastModifiedRecord)
+                $outArray[] = $lastModifiedOldRecord;
+
+        file_put_contents($this->dir . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName,implode(PHP_EOL,$outArray));
+    }
+
+    private function getlastModifiedsArray(){
+        return
+            is_file($this->dir . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName) ?
+                file($this->dir . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) : array();
     }
 }
