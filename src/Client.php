@@ -246,6 +246,7 @@ class Client
         if (is_file($olgLastModifiedFile)) {
             $lastModified = (int)file_get_contents($olgLastModifiedFile);
             $this->setLastModified($editionId, (int)$lastModified);
+            unlink($olgLastModifiedFile);
         }
         // TODO: end delete block in next minor release.
 
