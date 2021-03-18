@@ -101,7 +101,6 @@ class Client
      */
     public function run()
     {
-
         if (!empty($this->errors))
             return;
 
@@ -246,10 +245,9 @@ class Client
         $olgLastModifiedFile = $this->dir . DIRECTORY_SEPARATOR . $editionId . '.' . $this->type . '.last-modified';
         if (is_file($olgLastModifiedFile)) {
             $lastModified = (int)file_get_contents($olgLastModifiedFile);
-            unlink($olgLastModifiedFile);
+            $this->setLastModified($editionId, (int)$lastModified);
         }
         // TODO: end delete block in next minor release.
-
 
         foreach ($this->getLastModifiedArray() as $lastModifiedEdition) {
             preg_match('/^' . $editionId . '\.' . $this->type . ':(?P<last_modified>[\d]{10})$/i', $lastModifiedEdition, $matches);
