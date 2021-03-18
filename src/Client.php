@@ -150,7 +150,7 @@ class Client
         $oldFileName = $this->dir . DIRECTORY_SEPARATOR . $editionId . '.' . $this->type;
         $remoteFileLastModified = date_create($newFileRequestHeaders['last-modified'][0])->getTimestamp();
 
-        if (!is_file($oldFileName) || $remoteFileLastModified !== $this->getLocalLastModifed($editionId)) {
+        if (!is_file($oldFileName) || $remoteFileLastModified !== $this->getLocalLastModified($editionId)) {
 
             if (is_file($newFileName))
                 unlink($newFileName);
@@ -238,10 +238,20 @@ class Client
      * @param string $editionId
      * @return int
      */
-    private function getLocalLastModifed($editionId)
+    private function getLocalLastModified($editionId)
     {
         $lastModified = 0;
-        foreach ($this->getLastModifiedsArray() as $lastModifiedEdition) {
+
+        // TODO: Start delete block in next minor release.
+        $olgLastModifiedFile = $this->dir . DIRECTORY_SEPARATOR . $editionId . '.' . $this->type . '.last-modified';
+        if (is_file($olgLastModifiedFile)) {
+            $lastModified = (int)file_get_contents($olgLastModifiedFile);
+            unlink($olgLastModifiedFile);
+        }
+        // TODO: end delete block in next minor release.
+
+
+        foreach ($this->getLastModifiedArray() as $lastModifiedEdition) {
             preg_match('/^' . $editionId . '\.' . $this->type . ':(?P<last_modified>[\d]{10})$/i', $lastModifiedEdition, $matches);
             if (!empty($matches) && ($lastModified = $matches['last_modified'] ?: 0))
                 break;
@@ -268,7 +278,7 @@ class Client
         file_put_contents($this->dir . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName, implode(PHP_EOL, $outArray));
     }
 
-    private function getLastModifiedsArray()
+    private function getLastModifiedArray()
     {
         return
             is_file($this->dir . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName) ?
