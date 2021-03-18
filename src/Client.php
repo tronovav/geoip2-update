@@ -190,13 +190,9 @@ class Client
                 'suffix' => $this->remoteTypes[$this->type],
                 'license_key' => $this->license_key,
             ));
-
         $ch = curl_init($url);
-
         if (!empty($params['save_to'])) {
-
             $fh = fopen($params['save_to'], 'w');
-
             curl_setopt_array($ch, array(
                 CURLOPT_HTTPGET => true,
                 CURLOPT_BINARYTRANSFER => true,
@@ -267,10 +263,10 @@ class Client
         $lastModifiedRecord = "$edition.{$this->type}:$time";
         $outArray = array($lastModifiedRecord);
 
-        $lastModifiedsArray = is_file($this->dir . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName) ?
+        $lastModifiedArray = is_file($this->dir . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName) ?
             file($this->dir . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) : array();
 
-        foreach ($lastModifiedsArray as $lastModifiedOldRecord)
+        foreach ($lastModifiedArray as $lastModifiedOldRecord)
             if ($lastModifiedOldRecord != $lastModifiedRecord)
                 $outArray[] = $lastModifiedOldRecord;
 
