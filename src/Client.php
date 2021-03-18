@@ -102,7 +102,7 @@ class Client
     public function run()
     {
 
-        if(!empty($this->errors))
+        if (!empty($this->errors))
             return;
 
         $this->tmpDir = !empty($this->tmpDir) ? $this->tmpDir : sys_get_temp_dir();
@@ -174,7 +174,7 @@ class Client
             rmdir($iterator->getPath());
             unlink($newFileName);
 
-            $this->setLastModified($editionId,$remoteFileLastModified);
+            $this->setLastModified($editionId, $remoteFileLastModified);
             $this->updated[] = "$editionId.{$this->type} has been updated.";
         } else
             $this->updated[] = "$editionId.{$this->type} does not need to be updated.";
@@ -238,11 +238,12 @@ class Client
      * @param string $editionId
      * @return int
      */
-    private function getLocalLastModifed($editionId){
+    private function getLocalLastModifed($editionId)
+    {
         $lastModified = 0;
-        foreach ($this->getlastModifiedsArray() as $lastModifiedEdition){
-            preg_match('/^'.$editionId.':(?P<last_modified>[\d]{10})$/i',$lastModifiedEdition,$matches);
-            if(!empty($matches) && ($lastModified = $matches['last_modified'] ?: 0))
+        foreach ($this->getLastModifiedsArray() as $lastModifiedEdition) {
+            preg_match('/^' . $editionId . '\.' . $this->type . ':(?P<last_modified>[\d]{10})$/i', $lastModifiedEdition, $matches);
+            if (!empty($matches) && ($lastModified = $matches['last_modified'] ?: 0))
                 break;
         }
         return (int)$lastModified;
@@ -252,21 +253,23 @@ class Client
      * @param string $edition
      * @param int $time
      */
-    private function setLastModified($edition, $time){
-        $lastModifiedRecord = $edition.':'.$time;
+    private function setLastModified($edition, $time)
+    {
+        $lastModifiedRecord = "$edition.{$this->type}:$time";
         $outArray = array($lastModifiedRecord);
 
         $lastModifiedsArray = is_file($this->dir . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName) ?
             file($this->dir . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) : array();
 
-        foreach ($lastModifiedsArray  as $lastModifiedOldRecord)
-            if($lastModifiedOldRecord != $lastModifiedRecord)
+        foreach ($lastModifiedsArray as $lastModifiedOldRecord)
+            if ($lastModifiedOldRecord != $lastModifiedRecord)
                 $outArray[] = $lastModifiedOldRecord;
 
-        file_put_contents($this->dir . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName,implode(PHP_EOL,$outArray));
+        file_put_contents($this->dir . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName, implode(PHP_EOL, $outArray));
     }
 
-    private function getlastModifiedsArray(){
+    private function getLastModifiedsArray()
+    {
         return
             is_file($this->dir . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName) ?
                 file($this->dir . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) : array();
