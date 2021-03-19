@@ -8,7 +8,7 @@ Geoip2 Update is a php tool for updating Maxmind GeoLite2 and GeoIP2 databases f
 REQUIREMENTS
 ------------
 
-The minimum requirement by this library that your Web server supports PHP >= 5.3.0 with curl library.
+The minimum requirement of this library is for your web server to support PHP> = 5.3.0 with `curl` extension. And an optional `zip` extension if you want to update the `csv` database.
 
 INSTALLATION
 ------------
