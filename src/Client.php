@@ -118,7 +118,8 @@ class Client
             $this->updateEdition($editionId);
     }
 
-    private function validate(){
+    private function validate()
+    {
         if (!empty($this->errors))
             return false;
 
@@ -145,7 +146,7 @@ class Client
      */
     private function updateEdition($editionId)
     {
-        if(!array_key_exists($editionId,$this->remoteEditions)){
+        if (!array_key_exists($editionId, $this->remoteEditions)) {
             $this->errorUpdateEditions[$editionId] = "The Edition ID: \"{$editionId}\" does not exist or is not currently supported for updating.";
             return;
         }
@@ -154,7 +155,7 @@ class Client
             'edition_id' => $editionId
         ));
 
-        if(!empty($this->errorUpdateEditions[$editionId]))
+        if (!empty($this->errorUpdateEditions[$editionId]))
             return;
 
         if (empty($newFileRequestHeaders['content-disposition'])) {
@@ -173,9 +174,9 @@ class Client
                 'save_to' => $newFileName,
             ));
 
-            $this->extract($newFileName,$editionId);
+            $this->extract($newFileName, $editionId);
 
-            if(!empty($this->errorUpdateEditions[$editionId]))
+            if (!empty($this->errorUpdateEditions[$editionId]))
                 return;
 
             $this->setLocalLastModified($editionId, $remoteFileLastModified);
@@ -208,8 +209,8 @@ class Client
             $response = curl_exec($ch);
             curl_close($ch);
             fclose($fh);
-            if($response === false)
-                $this->errorUpdateEditions[$params['edition_id']] = "Error update \"{$params['edition_id']}\": ". curl_error($ch);
+            if ($response === false)
+                $this->errorUpdateEditions[$params['edition_id']] = "Error update \"{$params['edition_id']}\": " . curl_error($ch);
         } else {
             curl_setopt_array($ch, array(
                 CURLOPT_HEADER => true,
@@ -284,25 +285,29 @@ class Client
                 file($this->dir . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) : array();
     }
 
-    private function extract($archiveFile,$editionId){
-        preg_match('/\.(?P<extension>'. str_replace('.','\.',implode('|', array_values($this->remoteTypes))).')$/i',$archiveFile,$matches);
+    /**
+     * @param string $archiveFile
+     * @param string $editionId
+     */
+    private function extract($archiveFile, $editionId)
+    {
+        preg_match('/\.(?P<extension>' . str_replace('.', '\.', implode('|', array_values($this->remoteTypes))) . ')$/i', $archiveFile, $matches);
 
         $archiveType = (!empty($matches) ? ($matches['extension'] ?: null) : null);
 
-        if(empty($archiveType)){
+        if (empty($archiveType)) {
             $this->errorUpdateEditions[$editionId] = "Error extract \"$archiveFile\" archive. Unknown archive type.";
             unlink($archiveFile);
             return;
         }
 
-        if($archiveType === self::ARCHIVE_GZ){
+        if ($archiveType === self::ARCHIVE_GZ) {
             $phar = new \PharData($archiveFile);
             $phar->extractTo($this->tmpDir, null, true);
             $iterator = new \FilesystemIterator(substr($archiveFile, 0, -7));
-        }
-        elseif ($archiveType === self::ARCHIVE_ZIP){
+        } elseif ($archiveType === self::ARCHIVE_ZIP) {
 
-            if(!class_exists('\ZipArchive')){
+            if (!class_exists('\ZipArchive')) {
                 $this->errorUpdateEditions[$editionId] = "PHP zip extension is required to update csv databases. See https://www.php.net/manual/en/zip.installation.php to install zip php extension.";
                 return;
             }
@@ -312,12 +317,11 @@ class Client
             $zip->extractTo($this->tmpDir);
             $zip->close();
             $iterator = new \FilesystemIterator(substr($archiveFile, 0, -4));
-        }
-        else
+        } else
             return;
 
         foreach ($iterator as $fileIterator)
-            if ($fileIterator->isFile() && $fileIterator->getExtension() === array_search($archiveType,$this->remoteTypes))
+            if ($fileIterator->isFile() && $fileIterator->getExtension() === array_search($archiveType, $this->remoteTypes))
                 rename($fileIterator->getPathname(), $this->dir . DIRECTORY_SEPARATOR . $fileIterator->getFilename());
             else
                 unlink($fileIterator->getPathname());
