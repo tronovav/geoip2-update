@@ -110,7 +110,7 @@ Params:
 - `dir` (required) - Absolute path to the local storage of Geoip2 databases.
 - `editions` - List of database editions that you want to update. Maxmind.com offers databases for free download: `GeoLite2-ASN`, `GeoLite2-City`, `GeoLite2-Country`. These editions will be updated by default if you do not fill in the `editions` parameter. Otherwise, only the editions that you specified will be updated. See available editions in your maxmind.com account.
 
-Available GeoIP2 "Edition ID" of the databases that you can specify in the `editions` parameter and update. See available `Edition ID` databases for updates in [your maxmind.com account](https://www.maxmind.com/en/accounts/current/geoip/downloads/).
+Available GeoIP2 "Edition ID" of the databases that you can specify in the `editions` parameter and update.
 
 - `GeoLite2-ASN`
 - `GeoLite2-City`
@@ -127,6 +127,8 @@ Available GeoIP2 "Edition ID" of the databases that you can specify in the `edit
 - `GeoIP2-ASN-CSV`
 - `GeoIP2-City-CSV`
 - `GeoIP2-Country-CSV`
+
+See available `Edition ID` databases for updates in [your maxmind.com account](https://www.maxmind.com/en/accounts/current/geoip/downloads/).
 
 COPYRIGHT AND LICENSE
 ---------------------
