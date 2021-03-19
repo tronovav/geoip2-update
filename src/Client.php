@@ -173,7 +173,7 @@ class Client
             rmdir($iterator->getPath());
             unlink($newFileName);
 
-            $this->setLastModified($editionId, $remoteFileLastModified);
+            $this->setLocalLastModified($editionId, $remoteFileLastModified);
             $this->updated[] = "$editionId.{$this->type} has been updated.";
         } else
             $this->updated[] = "$editionId.{$this->type} does not need to be updated.";
@@ -241,7 +241,7 @@ class Client
         $olgLastModifiedFile = $this->dir . DIRECTORY_SEPARATOR . $editionId . '.' . $this->type . '.last-modified';
         if (is_file($olgLastModifiedFile)) {
             $lastModified = (int)file_get_contents($olgLastModifiedFile);
-            $this->setLastModified($editionId, (int)$lastModified);
+            $this->setLocalLastModified($editionId, (int)$lastModified);
             unlink($olgLastModifiedFile);
         }
         // TODO: end delete block in next minor release.
@@ -255,19 +255,16 @@ class Client
     }
 
     /**
-     * @param string $edition
+     * @param string $editionId
      * @param int $time
      */
-    private function setLastModified($edition, $time)
+    private function setLocalLastModified($editionId, $time)
     {
-        $lastModifiedRecord = "$edition.{$this->type}:$time";
+        $lastModifiedRecord = "$editionId.{$this->type}:$time";
         $outArray = array($lastModifiedRecord);
 
-        $lastModifiedArray = is_file($this->dir . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName) ?
-            file($this->dir . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) : array();
-
-        foreach ($lastModifiedArray as $lastModifiedOldRecord)
-            if ($lastModifiedOldRecord != $lastModifiedRecord)
+        foreach ($this->getLastModifiedArray() as $lastModifiedOldRecord)
+            if (preg_match('/' . $editionId . '\.' . $this->type . '/i', $lastModifiedOldRecord) === 0)
                 $outArray[] = $lastModifiedOldRecord;
 
         file_put_contents($this->dir . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName, implode(PHP_EOL, $outArray));
