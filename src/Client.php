@@ -16,6 +16,11 @@ namespace tronovav\GeoIP2Update;
  */
 class Client
 {
+    const TYPE_MMDB = 'mmdb';
+    const TYPE_CSV = 'csv';
+
+    const ARCHIVE_GZ = 'tar.gz';
+    const ARCHIVE_ZIP = 'zip';
 
     /**
      * @var string Your account’s actual license key in www.maxmind.com.
@@ -45,7 +50,6 @@ class Client
 
     private $urlApi = 'https://download.maxmind.com/app/geoip_download';
     private $updated = array();
-    private $updateEdition = array();
     private $errors = array();
     private $errorUpdateEditions = array();
 
@@ -67,12 +71,6 @@ class Client
         'GeoIP2-Country-CSV' => self::TYPE_CSV,
     );
 
-    const TYPE_MMDB = 'mmdb';
-    const TYPE_CSV = 'csv';
-
-    const ARCHIVE_GZ = 'tar.gz';
-    const ARCHIVE_ZIP = 'zip';
-
     private $remoteTypes = array(
         self::TYPE_MMDB => self::ARCHIVE_GZ,
         self::TYPE_CSV => self::ARCHIVE_ZIP,
@@ -89,28 +87,6 @@ class Client
                 $this->$key = $value;
             else
                 $this->errors[] = "The \"{$key}\" parameter does not exist. Remove it from the configuration. See https://github.com/tronovav/geoip2-update";
-    }
-
-    private function validate(){
-        if (!empty($this->errors))
-            return false;
-
-        if (!is_dir($this->tmpDir) || !is_writable($this->tmpDir))
-            $this->errors[] = sprintf("Temporary directory %s.", (empty($this->tmpDir) ? "not specified" : "{$this->tmpDir} is not writable"));
-
-        if (!is_dir($this->dir) || !is_writable($this->dir))
-            $this->errors[] = sprintf("Destination directory %s.", (empty($this->dir) ? "not specified" : "$this->dir is not writable"));
-
-        if (empty($this->license_key))
-            $this->errors[] = "You must specify your license_key https://support.maxmind.com/account-faq/license-keys/where-do-i-find-my-license-key/";
-
-        if (empty($this->editions))
-            $this->errors[] = "No GeoIP revision names are specified for the update. Specify the \"editions\" parameter in the config. See https://github.com/tronovav/geoip2-update";
-
-        if (!empty($this->errors))
-            return false;
-
-        return true;
     }
 
     /**
@@ -140,6 +116,28 @@ class Client
 
         foreach ($this->editions as $editionId)
             $this->updateEdition($editionId);
+    }
+
+    private function validate(){
+        if (!empty($this->errors))
+            return false;
+
+        if (!is_dir($this->tmpDir) || !is_writable($this->tmpDir))
+            $this->errors[] = sprintf("Temporary directory %s.", (empty($this->tmpDir) ? "not specified" : "{$this->tmpDir} is not writable"));
+
+        if (!is_dir($this->dir) || !is_writable($this->dir))
+            $this->errors[] = sprintf("Destination directory %s.", (empty($this->dir) ? "not specified" : "$this->dir is not writable"));
+
+        if (empty($this->license_key))
+            $this->errors[] = "You must specify your license_key https://support.maxmind.com/account-faq/license-keys/where-do-i-find-my-license-key/";
+
+        if (empty($this->editions))
+            $this->errors[] = "No GeoIP revision names are specified for the update. Specify the \"editions\" parameter in the config. See https://github.com/tronovav/geoip2-update";
+
+        if (!empty($this->errors))
+            return false;
+
+        return true;
     }
 
     /**
