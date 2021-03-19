@@ -71,8 +71,7 @@ Parameters in the `extra` section:
         "license_key": "MAXMIND_LICENSE_KEY",
         "dir": "DESTINATION_DIRECTORY_PATH",
 
-        "editions": ["GeoLite2-ASN", "GeoLite2-City", "GeoLite2-Country"],
-        "type": "mmdb"
+        "editions": ["GeoLite2-ASN", "GeoLite2-City", "GeoLite2-Country"]
     }
 }
 ```
@@ -81,8 +80,7 @@ Additional parameters in the `extra` section:
 
 - `license_key` (required) - The same as in the description of the basic configuration.
 - `dir` (required) - The same as in the description of the basic configuration.
-- `editions` - List of database editions that you want to update. Maxmind.com offers databases for free download: `GeoLite2-ASN`, `GeoLite2-City`, `GeoLite2-Country`. These editions will be updated by default if you do not fill in the `editions` parameter. Otherwise, only the editions that you specified will be updated. See available editions in your maxmind.com account.
-- `type` - Geoip2 database editions type. Currently, only the binary type `mmdb` is available for updating. Therefore, this parameter can be omitted.
+- `editions` - List of database editions that you want to update. Maxmind.com offers databases for free download: `GeoLite2-ASN`, `GeoLite2-City`, `GeoLite2-Country`. These editions will be updated by default if you do not fill in the `editions` parameter. Otherwise, only the editions that you specified will be updated. See available editions in [your maxmind.com account](https://www.maxmind.com/en/accounts/current/geoip/downloads/).
 
 ### 2. Updating databases from your php application:
 
@@ -96,7 +94,6 @@ $client = new \tronovav\GeoIP2Update\Client(array(
     'license_key' => 'MAXMIND_LICENSE_KEY',
     'dir' => 'DESTINATION_DIRECTORY_PATH',
     'editions' => array('GeoLite2-ASN', 'GeoLite2-City', 'GeoLite2-Country'),
-    'type' => 'mmdb',
 ));
 // run update
 $client->run();
@@ -112,7 +109,26 @@ Params:
 - `license_key` (required) - You can see your license key information on [your account License Keys page](https://support.maxmind.com/account-faq/license-keys/where-do-i-find-my-license-key/) at maxmind.com.
 - `dir` (required) - Absolute path to the local storage of Geoip2 databases.
 - `editions` - List of database editions that you want to update. Maxmind.com offers databases for free download: `GeoLite2-ASN`, `GeoLite2-City`, `GeoLite2-Country`. These editions will be updated by default if you do not fill in the `editions` parameter. Otherwise, only the editions that you specified will be updated. See available editions in your maxmind.com account.
-- `type` - Geoip2 database editions type. Currently, only the binary type `mmdb` is available for updating. Therefore, this parameter can be omitted.
+
+### Available GeoIP2 "Edition ID" of the databases that you can specify in the `editions` parameter and update.
+
+- `GeoLite2-ASN`
+- `GeoLite2-City`
+- `GeoLite2-Country`
+
+- `GeoLite2-ASN-CSV`
+- `GeoLite2-City-CSV`
+- `GeoLite2-Country-CSV`
+
+- `GeoIP2-ASN`
+- `GeoIP2-City`
+- `GeoIP2-Country`
+
+- `GeoIP2-ASN-CSV`
+- `GeoIP2-City-CSV`
+- `GeoIP2-Country-CSV`
+
+See available `Edition ID` databases for updates in [your maxmind.com account](https://www.maxmind.com/en/accounts/current/geoip/downloads/).
 
 COPYRIGHT AND LICENSE
 ---------------------

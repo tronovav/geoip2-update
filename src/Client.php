@@ -86,7 +86,7 @@ class Client
             if ($thisClass->hasProperty($key) && $thisClass->getProperty($key)->isPublic())
                 $this->$key = $value;
             else
-                $this->errors[] = "The \"{$key}\" parameter does not exist. Remove it from the configuration. See https://github.com/tronovav/geoip2-update";
+                $this->errors[] = "The \"{$key}\" parameter does not exist. Just remove it from the options. See https://github.com/tronovav/geoip2-update";
     }
 
     /**
