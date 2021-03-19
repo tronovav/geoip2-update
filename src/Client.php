@@ -151,9 +151,6 @@ class Client
 
         if (!is_file($oldFileName) || $remoteFileLastModified !== $this->getLocalLastModified($editionId)) {
 
-            if (is_file($newFileName))
-                unlink($newFileName);
-
             $this->request(array(
                 'edition_id' => $editionId,
                 'save_to' => $newFileName,
