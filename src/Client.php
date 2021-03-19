@@ -38,12 +38,6 @@ class Client
     public $dir;
 
     /**
-     * The type of databases being updated. May be "mmdb" or "csv". If not specified, the mmdb type is the default.
-     * @var string
-     */
-    public $type = 'mmdb';
-
-    /**
      * Temporary directory for updating. By default the directory obtained by the sys_get_temp_dir() function.
      * @var string
      */
@@ -51,32 +45,72 @@ class Client
 
     private $urlApi = 'https://download.maxmind.com/app/geoip_download';
     private $updated = array();
+    private $updateEdition = array();
     private $errors = array();
+    private $errorUpdateEditions = array();
+
     private $remoteEditions = array(
-        'GeoLite2-ASN',
-        'GeoIP2-ASN',
+        'GeoLite2-ASN' => self::TYPE_MMDB,
+        'GeoLite2-City' => self::TYPE_MMDB,
+        'GeoLite2-Country' => self::TYPE_MMDB,
 
-        'GeoLite2-City',
-        'GeoIP2-City',
+        'GeoIP2-ASN' => self::TYPE_MMDB,
+        'GeoIP2-City' => self::TYPE_MMDB,
+        'GeoIP2-Country' => self::TYPE_MMDB,
 
-        'GeoLite2-Country',
-        'GeoIP2-Country',
+        'GeoLite2-ASN-CSV' => self::TYPE_CSV,
+        'GeoLite2-City-CSV' => self::TYPE_CSV,
+        'GeoLite2-Country-CSV' => self::TYPE_CSV,
+
+        'GeoIP2-ASN-CSV' => self::TYPE_CSV,
+        'GeoIP2-City-CSV' => self::TYPE_CSV,
+        'GeoIP2-Country-CSV' => self::TYPE_CSV,
     );
+
+    const TYPE_MMDB = 'mmdb';
+    const TYPE_CSV = 'csv';
+
+    const ARCHIVE_GZ = 'tar.gz';
+    const ARCHIVE_ZIP = 'zip';
+
     private $remoteTypes = array(
-        'mmdb' => 'tar.gz',
-        // TODO implement csv extension
-        //'csv' => 'zip',
+        self::TYPE_MMDB => self::ARCHIVE_GZ,
+        self::TYPE_CSV => self::ARCHIVE_ZIP,
     );
     private $lastModifiedStorageFileName = 'geoip2.last-modified';
 
-    public function __construct($params = array())
+    public function __construct(array $params)
     {
+        $this->tmpDir = sys_get_temp_dir();
+
         $thisClass = new \ReflectionClass($this);
         foreach ($params as $key => $value)
             if ($thisClass->hasProperty($key) && $thisClass->getProperty($key)->isPublic())
                 $this->$key = $value;
             else
-                $this->errors[] = "Parameter \"{$key}\" does not exist.";
+                $this->errors[] = "The \"{$key}\" parameter does not exist. Remove it from the configuration. See https://github.com/tronovav/geoip2-update";
+    }
+
+    private function validate(){
+        if (!empty($this->errors))
+            return false;
+
+        if (!is_dir($this->tmpDir) || !is_writable($this->tmpDir))
+            $this->errors[] = sprintf("Temporary directory %s.", (empty($this->tmpDir) ? "not specified" : "{$this->tmpDir} is not writable"));
+
+        if (!is_dir($this->dir) || !is_writable($this->dir))
+            $this->errors[] = sprintf("Destination directory %s.", (empty($this->dir) ? "not specified" : "$this->dir is not writable"));
+
+        if (empty($this->license_key))
+            $this->errors[] = "You must specify your license_key https://support.maxmind.com/account-faq/license-keys/where-do-i-find-my-license-key/";
+
+        if (empty($this->editions))
+            $this->errors[] = "No GeoIP revision names are specified for the update. Specify the \"editions\" parameter in the config. See https://github.com/tronovav/geoip2-update";
+
+        if (!empty($this->errors))
+            return false;
+
+        return true;
     }
 
     /**
@@ -93,7 +127,7 @@ class Client
      */
     public function errors()
     {
-        return $this->errors;
+        return array_merge($this->errors, array_values($this->errorUpdateEditions));
     }
 
     /**
@@ -101,33 +135,11 @@ class Client
      */
     public function run()
     {
-        if (!empty($this->errors))
+        if (!$this->validate())
             return;
 
-        $this->tmpDir = !empty($this->tmpDir) ? $this->tmpDir : sys_get_temp_dir();
-
-        if (!is_dir($this->tmpDir) || !is_writable($this->tmpDir))
-            $this->errors[] = sprintf("Temporary directory %s.", (empty($this->tmpDir) ? "not specified" : "{$this->tmpDir} is not writable"));
-
-        if (!is_dir($this->dir) || !is_writable($this->dir))
-            $this->errors[] = sprintf("Destination directory %s.", (empty($this->dir) ? "not specified" : "$this->dir is not writable"));
-
-        if (empty($this->type) || !array_key_exists($this->type, $this->remoteTypes))
-            $this->errors[] = sprintf("Database type %s.", (empty($this->type) ? "not specified" : "$this->type does not exist"));
-
-        if (empty($this->license_key))
-            $this->errors[] = "You must specify your license_key https://support.maxmind.com/account-faq/license-keys/where-do-i-find-my-license-key/";
-
-        $editionsForUpdate = array_intersect($this->editions, $this->remoteEditions);
-        if (empty($editionsForUpdate))
-            $this->errors[] = "No revision names are specified for the update.";
-
-        if (!empty($this->errors))
-            return;
-
-        foreach ($editionsForUpdate as $edition) {
-            $this->updateEdition($edition);
-        }
+        foreach ($this->editions as $editionId)
+            $this->updateEdition($editionId);
     }
 
     /**
@@ -135,45 +147,43 @@ class Client
      */
     private function updateEdition($editionId)
     {
+        if(!array_key_exists($editionId,$this->remoteEditions)){
+            $this->errorUpdateEditions[$editionId] = "The Edition ID: \"{$editionId}\" does not exist or is not currently supported for updating.";
+            return;
+        }
+
         $newFileRequestHeaders = $this->request(array(
             'edition_id' => $editionId
         ));
 
+        if(!empty($this->errorUpdateEditions[$editionId]))
+            return;
+
         if (empty($newFileRequestHeaders['content-disposition'])) {
-            $this->errors[] = "{$editionId}.{$this->type} not found in maxmind.com";
+            $this->errorUpdateEditions[$editionId] = "Edition ID: \"{$editionId}\" not found in maxmind.com";
             return;
         }
         preg_match('/filename=(?<attachment>[\w.\d-]+)$/', $newFileRequestHeaders['content-disposition'][0], $matches);
 
         $newFileName = $this->tmpDir . DIRECTORY_SEPARATOR . $matches['attachment'];
-        $oldFileName = $this->dir . DIRECTORY_SEPARATOR . $editionId . '.' . $this->type;
         $remoteFileLastModified = date_create($newFileRequestHeaders['last-modified'][0])->getTimestamp();
 
-        if (!is_file($oldFileName) || $remoteFileLastModified !== $this->getLocalLastModified($editionId)) {
+        if ($remoteFileLastModified !== $this->getLocalLastModified($editionId)) {
 
             $this->request(array(
                 'edition_id' => $editionId,
                 'save_to' => $newFileName,
             ));
 
-            $phar = new \PharData($newFileName);
-            $phar->extractTo($this->tmpDir, null, true);
+            $this->extract($newFileName,$editionId);
 
-            $iterator = new \FilesystemIterator(substr($newFileName, 0, -7));
-
-            foreach ($iterator as $fileIterator)
-                if ($fileIterator->isFile() && $fileIterator->getExtension() === $this->type)
-                    rename($fileIterator->getPathname(), $this->dir . DIRECTORY_SEPARATOR . $fileIterator->getFilename());
-                else
-                    unlink($fileIterator->getPathname());
-
-            rmdir($iterator->getPath());
-            unlink($newFileName);
+            if(!empty($this->errorUpdateEditions[$editionId]))
+                return;
 
             $this->setLocalLastModified($editionId, $remoteFileLastModified);
-            $this->updated[] = "$editionId.{$this->type} has been updated.";
+            $this->updated[] = "$editionId has been updated.";
         } else
-            $this->updated[] = "$editionId.{$this->type} does not need to be updated.";
+            $this->updated[] = "$editionId does not need to be updated.";
     }
 
     /**
@@ -183,10 +193,11 @@ class Client
     private function request($params = array())
     {
         $url = $this->urlApi . '?' . http_build_query(array(
-                'edition_id' => !empty($params['edition_id']) ? $params['edition_id'] : '',
-                'suffix' => $this->remoteTypes[$this->type],
+                'edition_id' => $params['edition_id'],
+                'suffix' => $this->remoteTypes[$this->remoteEditions[$params['edition_id']]],
                 'license_key' => $this->license_key,
             ));
+
         $ch = curl_init($url);
         if (!empty($params['save_to'])) {
             $fh = fopen($params['save_to'], 'w');
@@ -196,9 +207,11 @@ class Client
                 CURLOPT_HEADER => false,
                 CURLOPT_FILE => $fh,
             ));
-            curl_exec($ch);
+            $response = curl_exec($ch);
             curl_close($ch);
             fclose($fh);
+            if($response === false)
+                $this->errorUpdateEditions[$params['edition_id']] = "Error update \"{$params['edition_id']}\": ". curl_error($ch);
         } else {
             curl_setopt_array($ch, array(
                 CURLOPT_HEADER => true,
@@ -235,7 +248,7 @@ class Client
         $lastModified = 0;
 
         // TODO: Start delete block in next minor release.
-        $olgLastModifiedFile = $this->dir . DIRECTORY_SEPARATOR . $editionId . '.' . $this->type . '.last-modified';
+        $olgLastModifiedFile = $this->dir . DIRECTORY_SEPARATOR . $editionId . '.' . $this->remoteEditions[$editionId] . '.last-modified';
         if (is_file($olgLastModifiedFile)) {
             $lastModified = (int)file_get_contents($olgLastModifiedFile);
             $this->setLocalLastModified($editionId, (int)$lastModified);
@@ -244,7 +257,7 @@ class Client
         // TODO: end delete block in next minor release.
 
         foreach ($this->getLastModifiedArray() as $lastModifiedEdition) {
-            preg_match('/^' . $editionId . '\.' . $this->type . ':(?P<last_modified>[\d]{10})$/i', $lastModifiedEdition, $matches);
+            preg_match('/^' . $editionId . ':(?P<last_modified>[\d]{10})$/i', $lastModifiedEdition, $matches);
             if (!empty($matches) && ($lastModified = $matches['last_modified'] ?: 0))
                 break;
         }
@@ -257,11 +270,10 @@ class Client
      */
     private function setLocalLastModified($editionId, $time)
     {
-        $lastModifiedRecord = "$editionId.{$this->type}:$time";
-        $outArray = array($lastModifiedRecord);
+        $outArray = array("$editionId:$time");
 
         foreach ($this->getLastModifiedArray() as $lastModifiedOldRecord)
-            if (preg_match('/' . $editionId . '\.' . $this->type . '/i', $lastModifiedOldRecord) === 0)
+            if (preg_match('/' . $editionId . '/i', $lastModifiedOldRecord) === 0)
                 $outArray[] = $lastModifiedOldRecord;
 
         file_put_contents($this->dir . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName, implode(PHP_EOL, $outArray));
@@ -272,5 +284,47 @@ class Client
         return
             is_file($this->dir . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName) ?
                 file($this->dir . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) : array();
+    }
+
+    private function extract($archiveFile,$editionId){
+        preg_match('/\.(?P<extension>'. str_replace('.','\.',implode('|', array_values($this->remoteTypes))).')$/i',$archiveFile,$matches);
+
+        $archiveType = (!empty($matches) ? ($matches['extension'] ?: null) : null);
+
+        if(empty($archiveType)){
+            $this->errorUpdateEditions[$editionId] = "Error extract \"$archiveFile\" archive. Unknown archive type.";
+            unlink($archiveFile);
+            return;
+        }
+
+        if($archiveType === self::ARCHIVE_GZ){
+            $phar = new \PharData($archiveFile);
+            $phar->extractTo($this->tmpDir, null, true);
+            $iterator = new \FilesystemIterator(substr($archiveFile, 0, -7));
+        }
+        elseif ($archiveType === self::ARCHIVE_ZIP){
+
+            if(!class_exists('\ZipArchive')){
+                $this->errorUpdateEditions[$editionId] = "PHP zip extension is required to update csv databases. See https://www.php.net/manual/en/zip.installation.php to install zip php extension.";
+                return;
+            }
+
+            $zip = new \ZipArchive;
+            $zip->open($archiveFile);
+            $zip->extractTo($this->tmpDir);
+            $zip->close();
+            $iterator = new \FilesystemIterator(substr($archiveFile, 0, -4));
+        }
+        else
+            return;
+
+        foreach ($iterator as $fileIterator)
+            if ($fileIterator->isFile() && $fileIterator->getExtension() === array_search($archiveType,$this->remoteTypes))
+                rename($fileIterator->getPathname(), $this->dir . DIRECTORY_SEPARATOR . $fileIterator->getFilename());
+            else
+                unlink($fileIterator->getPathname());
+
+        rmdir($iterator->getPath());
+        unlink($archiveFile);
     }
 }
