@@ -42,12 +42,6 @@ class Client
      */
     public $dir;
 
-    /**
-     * Temporary directory for updating. By default the directory obtained by the sys_get_temp_dir() function.
-     * @var string
-     */
-    public $tmpDir;
-
     private $urlApi = 'https://download.maxmind.com/app/geoip_download';
     private $updated = array();
     private $errors = array();
@@ -75,18 +69,18 @@ class Client
         self::TYPE_MMDB => self::ARCHIVE_GZ,
         self::TYPE_CSV => self::ARCHIVE_ZIP,
     );
-    private $lastModifiedStorageFileName = 'geoip2.last-modified';
+    private $lastModifiedStorageFileName = 'last-modified.txt';
 
     public function __construct(array $params)
     {
-        $this->tmpDir = sys_get_temp_dir();
-
         $thisClass = new \ReflectionClass($this);
         foreach ($params as $key => $value)
             if ($thisClass->hasProperty($key) && $thisClass->getProperty($key)->isPublic())
                 $this->$key = $value;
             else
                 $this->errors[] = "The \"{$key}\" parameter does not exist. Just remove it from the options. See https://github.com/tronovav/geoip2-update";
+
+        $this->editions = array_unique((array)$this->editions);
     }
 
     /**
@@ -123,9 +117,6 @@ class Client
         if (!empty($this->errors))
             return false;
 
-        if (!is_dir($this->tmpDir) || !is_writable($this->tmpDir))
-            $this->errors[] = sprintf("Temporary directory %s.", (empty($this->tmpDir) ? "not specified" : "{$this->tmpDir} is not writable"));
-
         if (!is_dir($this->dir) || !is_writable($this->dir))
             $this->errors[] = sprintf("Destination directory %s.", (empty($this->dir) ? "not specified" : "$this->dir is not writable"));
 
@@ -151,10 +142,12 @@ class Client
             return;
         }
 
-        $newFileRequestHeaders = $this->request(array(
-            'edition_id' => $editionId
-        ));
+        if ($this->getArchiveType($editionId) === self::ARCHIVE_ZIP && !class_exists('\ZipArchive')) {
+            $this->errorUpdateEditions[$editionId] = "PHP zip extension is required to update csv databases. See https://www.php.net/manual/en/zip.installation.php to install zip php extension.";
+            return;
+        }
 
+        $newFileRequestHeaders = $this->headers($editionId);
         if (!empty($this->errorUpdateEditions[$editionId]))
             return;
 
@@ -162,65 +155,71 @@ class Client
             $this->errorUpdateEditions[$editionId] = "Edition ID: \"{$editionId}\" not found in maxmind.com";
             return;
         }
-        preg_match('/filename=(?<attachment>[\w.\d-]+)$/', $newFileRequestHeaders['content-disposition'][0], $matches);
 
-        $newFileName = $this->tmpDir . DIRECTORY_SEPARATOR . $matches['attachment'];
         $remoteFileLastModified = date_create($newFileRequestHeaders['last-modified'][0])->getTimestamp();
+        $localFileLastModified = is_file($this->dir . DIRECTORY_SEPARATOR . $editionId . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName) ?
+            (int)file_get_contents($this->dir . DIRECTORY_SEPARATOR . $editionId . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName) : 0;
 
-        if ($remoteFileLastModified !== $this->getLocalLastModified($editionId)) {
+        if ($remoteFileLastModified !== $localFileLastModified) {
 
-            $this->request(array(
-                'edition_id' => $editionId,
-                'save_to' => $newFileName,
-            ));
-
-            $this->extract($newFileName, $editionId);
-
+            $this->download($editionId);
             if (!empty($this->errorUpdateEditions[$editionId]))
                 return;
 
-            $this->setLocalLastModified($editionId, $remoteFileLastModified);
+            $this->extract($editionId);
+            if (!empty($this->errorUpdateEditions[$editionId]))
+                return;
+
+            file_put_contents($this->dir . DIRECTORY_SEPARATOR . $editionId . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName, $remoteFileLastModified);
             $this->updated[] = "$editionId has been updated.";
         } else
             $this->updated[] = "$editionId does not need to be updated.";
     }
 
     /**
-     * @param array $params
-     * @return array|void
+     * @param string $editionId
+     * @return array
      */
-    private function request($params = array())
+    private function headers($editionId)
     {
-        $url = $this->urlApi . '?' . http_build_query(array(
-                'edition_id' => $params['edition_id'],
-                'suffix' => $this->remoteTypes[$this->remoteEditions[$params['edition_id']]],
+        $ch = curl_init($this->getRequestUrl($editionId));
+        curl_setopt_array($ch, array(
+            CURLOPT_HEADER => true,
+            CURLOPT_NOBODY => true,
+            CURLOPT_RETURNTRANSFER => true,
+        ));
+        $header = curl_exec($ch);
+        curl_close($ch);
+        return $this->parseHeaders($header);
+    }
+
+    /**
+     * @param string $editionId
+     */
+    private function download($editionId)
+    {
+        $ch = curl_init($this->getRequestUrl($editionId));
+        $fh = fopen($this->dir . DIRECTORY_SEPARATOR . $editionId . '.' . $this->remoteTypes[$this->remoteEditions[$editionId]], 'wb');
+        curl_setopt_array($ch, array(
+            CURLOPT_HTTPGET => true,
+            CURLOPT_BINARYTRANSFER => true,
+            CURLOPT_HEADER => false,
+            CURLOPT_FILE => $fh,
+        ));
+        $response = curl_exec($ch);
+        curl_close($ch);
+        fclose($fh);
+        if ($response === false)
+            $this->errorUpdateEditions[$editionId] = "Error download \"{$editionId}\": " . curl_error($ch);
+    }
+
+    private function getRequestUrl($edition_id)
+    {
+        return $this->urlApi . '?' . http_build_query(array(
+                'edition_id' => $edition_id,
+                'suffix' => $this->remoteTypes[$this->remoteEditions[$edition_id]],
                 'license_key' => $this->license_key,
             ));
-
-        $ch = curl_init($url);
-        if (!empty($params['save_to'])) {
-            $fh = fopen($params['save_to'], 'w');
-            curl_setopt_array($ch, array(
-                CURLOPT_HTTPGET => true,
-                CURLOPT_BINARYTRANSFER => true,
-                CURLOPT_HEADER => false,
-                CURLOPT_FILE => $fh,
-            ));
-            $response = curl_exec($ch);
-            curl_close($ch);
-            fclose($fh);
-            if ($response === false)
-                $this->errorUpdateEditions[$params['edition_id']] = "Error update \"{$params['edition_id']}\": " . curl_error($ch);
-        } else {
-            curl_setopt_array($ch, array(
-                CURLOPT_HEADER => true,
-                CURLOPT_NOBODY => true,
-                CURLOPT_RETURNTRANSFER => true,
-            ));
-            $header = curl_exec($ch);
-            curl_close($ch);
-            return $this->parseHeaders($header);
-        }
     }
 
     /**
@@ -240,93 +239,54 @@ class Client
 
     /**
      * @param string $editionId
-     * @return int
      */
-    private function getLocalLastModified($editionId)
+    private function extract($editionId)
     {
-        $lastModified = 0;
 
-        // TODO: Start delete block in next minor release.
-        $olgLastModifiedFile = $this->dir . DIRECTORY_SEPARATOR . $editionId . '.' . $this->remoteEditions[$editionId] . '.last-modified';
-        if (is_file($olgLastModifiedFile)) {
-            $lastModified = (int)file_get_contents($olgLastModifiedFile);
-            $this->setLocalLastModified($editionId, (int)$lastModified);
-            unlink($olgLastModifiedFile);
-        }
-        // TODO: end delete block in next minor release.
+        switch (true) {
+            case $this->getArchiveType($editionId) === self::ARCHIVE_GZ:
 
-        foreach ($this->getLastModifiedArray() as $lastModifiedEdition) {
-            preg_match('/^' . $editionId . ':(?P<last_modified>[\d]{10})$/i', $lastModifiedEdition, $matches);
-            if (!empty($matches) && ($lastModified = $matches['last_modified'] ?: 0))
+                $phar = new \PharData($this->getArchiveFile($editionId));
+                $phar->extractTo($this->dir, null, true);
+                break;
+            case $this->getArchiveType($editionId) === self::ARCHIVE_ZIP:
+
+                $zip = new \ZipArchive;
+                $zip->open($this->getArchiveFile($editionId));
+                $zip->extractTo($this->dir);
+                $zip->close();
                 break;
         }
-        return (int)$lastModified;
+
+        unlink($this->getArchiveFile($editionId));
+
+        $this->deleteDirectory($this->dir . DIRECTORY_SEPARATOR . $editionId);
+
+        $directories = new \DirectoryIterator($this->dir);
+        foreach ($directories as $directory)
+            if ($directory->isDir() && preg_match('/^' . $editionId . '[_\d]+$/i', $directory->getFilename()))
+                rename($directory->getPathname(), $this->dir . DIRECTORY_SEPARATOR . $editionId);
     }
 
-    /**
-     * @param string $editionId
-     * @param int $time
-     */
-    private function setLocalLastModified($editionId, $time)
+    private function deleteDirectory($directoryPath)
     {
-        $outArray = array("$editionId:$time");
 
-        foreach ($this->getLastModifiedArray() as $lastModifiedOldRecord)
-            if (preg_match('/' . $editionId . '/i', $lastModifiedOldRecord) === 0)
-                $outArray[] = $lastModifiedOldRecord;
-
-        file_put_contents($this->dir . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName, implode(PHP_EOL, $outArray));
-    }
-
-    private function getLastModifiedArray()
-    {
-        return
-            is_file($this->dir . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName) ?
-                file($this->dir . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) : array();
-    }
-
-    /**
-     * @param string $archiveFile
-     * @param string $editionId
-     */
-    private function extract($archiveFile, $editionId)
-    {
-        preg_match('/\.(?P<extension>' . str_replace('.', '\.', implode('|', array_values($this->remoteTypes))) . ')$/i', $archiveFile, $matches);
-
-        $archiveType = (!empty($matches) ? ($matches['extension'] ?: null) : null);
-
-        if (empty($archiveType)) {
-            $this->errorUpdateEditions[$editionId] = "Error extract \"$archiveFile\" archive. Unknown archive type.";
-            unlink($archiveFile);
-            return;
+        if (is_dir($directoryPath)) {
+            $directory = new \RecursiveDirectoryIterator($directoryPath, \FilesystemIterator::SKIP_DOTS);
+            $children = new \RecursiveIteratorIterator($directory, \RecursiveIteratorIterator::CHILD_FIRST);
+            foreach ($children as $child)
+                $child->isDir() ? rmdir($child) : unlink($child);
+            rmdir($directoryPath);
         }
+    }
 
-        if ($archiveType === self::ARCHIVE_GZ) {
-            $phar = new \PharData($archiveFile);
-            $phar->extractTo($this->tmpDir, null, true);
-            $iterator = new \FilesystemIterator(substr($archiveFile, 0, -7));
-        } elseif ($archiveType === self::ARCHIVE_ZIP) {
+    private function getArchiveType($editionId)
+    {
+        return $this->remoteTypes[$this->remoteEditions[$editionId]];
+    }
 
-            if (!class_exists('\ZipArchive')) {
-                $this->errorUpdateEditions[$editionId] = "PHP zip extension is required to update csv databases. See https://www.php.net/manual/en/zip.installation.php to install zip php extension.";
-                return;
-            }
-
-            $zip = new \ZipArchive;
-            $zip->open($archiveFile);
-            $zip->extractTo($this->tmpDir);
-            $zip->close();
-            $iterator = new \FilesystemIterator(substr($archiveFile, 0, -4));
-        } else
-            return;
-
-        foreach ($iterator as $fileIterator)
-            if ($fileIterator->isFile() && $fileIterator->getExtension() === array_search($archiveType, $this->remoteTypes))
-                rename($fileIterator->getPathname(), $this->dir . DIRECTORY_SEPARATOR . $fileIterator->getFilename());
-            else
-                unlink($fileIterator->getPathname());
-
-        rmdir($iterator->getPath());
-        unlink($archiveFile);
+    private function getArchiveFile($editionId)
+    {
+        return $this->dir . DIRECTORY_SEPARATOR . $editionId . '.' . $this->getArchiveType($editionId);
     }
 }
