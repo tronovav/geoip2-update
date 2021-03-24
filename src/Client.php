@@ -269,7 +269,6 @@ class Client
      */
     private function extract($editionId)
     {
-
         switch (true) {
             case $this->getArchiveType($editionId) === self::ARCHIVE_GZ:
 
@@ -300,7 +299,6 @@ class Client
      */
     private function deleteDirectory($directoryPath)
     {
-
         if (is_dir($directoryPath)) {
             $directory = new \RecursiveDirectoryIterator($directoryPath, \FilesystemIterator::SKIP_DOTS);
             $children = new \RecursiveIteratorIterator($directory, \RecursiveIteratorIterator::CHILD_FIRST);
