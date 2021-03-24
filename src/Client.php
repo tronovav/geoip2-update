@@ -30,6 +30,7 @@ class Client
 
     /**
      * @var string[] Database editions list to update.
+     * @link https://www.maxmind.com/en/accounts/current/geoip/downloads/
      */
     public $editions = array(
         'GeoLite2-ASN',
@@ -84,6 +85,7 @@ class Client
     }
 
     /**
+     * Update info.
      * @return array
      */
     public function updated()
@@ -92,7 +94,7 @@ class Client
     }
 
     /**
-     * Critical update errors.
+     * Update errors.
      * @return array
      */
     public function errors()
@@ -112,6 +114,9 @@ class Client
             $this->updateEdition($editionId);
     }
 
+    /**
+     * @return bool
+     */
     private function validate()
     {
         if (!empty($this->errors))
@@ -178,6 +183,37 @@ class Client
 
     /**
      * @param string $editionId
+     * @return string
+     */
+    private function getRequestUrl($editionId)
+    {
+        return $this->urlApi . '?' . http_build_query(array(
+                'edition_id' => $editionId,
+                'suffix' => $this->remoteTypes[$this->remoteEditions[$editionId]],
+                'license_key' => $this->license_key,
+            ));
+    }
+
+    /**
+     * @param string $editionId
+     * @return string
+     */
+    private function getArchiveType($editionId)
+    {
+        return $this->remoteTypes[$this->remoteEditions[$editionId]];
+    }
+
+    /**
+     * @param string $editionId
+     * @return string
+     */
+    private function getArchiveFile($editionId)
+    {
+        return $this->dir . DIRECTORY_SEPARATOR . $editionId . '.' . $this->getArchiveType($editionId);
+    }
+
+    /**
+     * @param string $editionId
      * @return array
      */
     private function headers($editionId)
@@ -211,15 +247,6 @@ class Client
         fclose($fh);
         if ($response === false)
             $this->errorUpdateEditions[$editionId] = "Error download \"{$editionId}\": " . curl_error($ch);
-    }
-
-    private function getRequestUrl($edition_id)
-    {
-        return $this->urlApi . '?' . http_build_query(array(
-                'edition_id' => $edition_id,
-                'suffix' => $this->remoteTypes[$this->remoteEditions[$edition_id]],
-                'license_key' => $this->license_key,
-            ));
     }
 
     /**
@@ -268,6 +295,9 @@ class Client
                 rename($directory->getPathname(), $this->dir . DIRECTORY_SEPARATOR . $editionId);
     }
 
+    /**
+     * @param string $directoryPath
+     */
     private function deleteDirectory($directoryPath)
     {
 
@@ -278,15 +308,5 @@ class Client
                 $child->isDir() ? rmdir($child) : unlink($child);
             rmdir($directoryPath);
         }
-    }
-
-    private function getArchiveType($editionId)
-    {
-        return $this->remoteTypes[$this->remoteEditions[$editionId]];
-    }
-
-    private function getArchiveFile($editionId)
-    {
-        return $this->dir . DIRECTORY_SEPARATOR . $editionId . '.' . $this->getArchiveType($editionId);
     }
 }
