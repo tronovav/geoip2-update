@@ -1,6 +1,6 @@
 ![geoip2-update-logo](https://user-images.githubusercontent.com/25905384/111375423-4631ce00-86af-11eb-81a9-2bc4dab89068.png)
 
-Geoip2 Update is a php tool for updating Maxmind GeoLite2 and GeoIP2 databases from your script, program or via Composer.
+Geoip2 Update is a php tool for updating Maxmind GeoLite2 and GeoIP2 databases from your script, application or via Composer.
 
 [![Latest Stable Version](https://img.shields.io/packagist/v/tronovav/geoip2-update.svg)](https://packagist.org/packages/tronovav/geoip2-update)
 ![Packagist PHP Version Support](https://img.shields.io/packagist/php-v/tronovav/geoip2-update)
