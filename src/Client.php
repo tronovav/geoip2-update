@@ -47,7 +47,6 @@ class Client
     private $updated = array();
     private $errors = array();
     private $errorUpdateEditions = array();
-
     private $remoteEditions = array(
         'GeoLite2-ASN' => self::TYPE_MMDB,
         'GeoLite2-City' => self::TYPE_MMDB,
@@ -65,7 +64,6 @@ class Client
         'GeoIP2-City-CSV' => self::TYPE_CSV,
         'GeoIP2-Country-CSV' => self::TYPE_CSV,
     );
-
     private $remoteTypes = array(
         self::TYPE_MMDB => self::ARCHIVE_GZ,
         self::TYPE_CSV => self::ARCHIVE_ZIP,
@@ -146,12 +144,10 @@ class Client
             $this->errorUpdateEditions[$editionId] = "The Edition ID: \"{$editionId}\" does not exist or is not currently supported for updating.";
             return;
         }
-
         if ($this->getArchiveType($editionId) === self::ARCHIVE_ZIP && !class_exists('\ZipArchive')) {
             $this->errorUpdateEditions[$editionId] = "PHP zip extension is required to update csv databases. See https://www.php.net/manual/en/zip.installation.php to install zip php extension.";
             return;
         }
-
         $newFileRequestHeaders = $this->headers($editionId);
         if (!empty($this->errorUpdateEditions[$editionId]))
             return;
@@ -160,7 +156,6 @@ class Client
             $this->errorUpdateEditions[$editionId] = "Edition ID: \"{$editionId}\" not found in maxmind.com";
             return;
         }
-
         $remoteFileLastModified = date_create($newFileRequestHeaders['last-modified'][0])->getTimestamp();
         $localFileLastModified = is_file($this->dir . DIRECTORY_SEPARATOR . $editionId . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName) ?
             (int)file_get_contents($this->dir . DIRECTORY_SEPARATOR . $editionId . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName) : 0;
@@ -189,7 +184,7 @@ class Client
     {
         return $this->urlApi . '?' . http_build_query(array(
                 'edition_id' => $editionId,
-                'suffix' => $this->remoteTypes[$this->remoteEditions[$editionId]],
+                'suffix' => $this->getArchiveType($editionId),
                 'license_key' => $this->license_key,
             ));
     }
@@ -235,7 +230,7 @@ class Client
     private function download($editionId)
     {
         $ch = curl_init($this->getRequestUrl($editionId));
-        $fh = fopen($this->dir . DIRECTORY_SEPARATOR . $editionId . '.' . $this->remoteTypes[$this->remoteEditions[$editionId]], 'wb');
+        $fh = fopen($this->getArchiveFile($editionId), 'wb');
         curl_setopt_array($ch, array(
             CURLOPT_HTTPGET => true,
             CURLOPT_BINARYTRANSFER => true,
@@ -290,8 +285,10 @@ class Client
 
         $directories = new \DirectoryIterator($this->dir);
         foreach ($directories as $directory)
-            if ($directory->isDir() && preg_match('/^' . $editionId . '[_\d]+$/i', $directory->getFilename()))
+            if ($directory->isDir() && preg_match('/^' . $editionId . '[_\d]+$/i', $directory->getFilename())){
                 rename($directory->getPathname(), $this->dir . DIRECTORY_SEPARATOR . $editionId);
+                break;
+            }
     }
 
     /**
