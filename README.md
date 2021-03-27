@@ -34,7 +34,9 @@ Each time the `composer update` command is invoked, the library will check for u
 # composer.json
 
 "scripts": {
-        "post-update-cmd": "tronovav\\GeoIP2Update\\ComposerClient::run"
+        "post-update-cmd": [
+            "tronovav\\GeoIP2Update\\ComposerClient::run"
+        ]
 },
 "extra": {
     "tronovav\\GeoIP2Update\\ComposerClient::run": {
