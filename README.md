@@ -108,6 +108,16 @@ Available GeoIP2 `Edition ID` of the databases that you can specify in the `edit
 
 See available `Edition ID` databases for updates in [your maxmind.com account](https://www.maxmind.com/en/accounts/current/geoip/downloads/).
 
+DATABASE UPDATE ATOMICITY
+-------------------------
+
+Currently, the atomicity of the update operation is implemented at the level of individual database files.
+
+The structure of the mmdb and csv databases is different. Mmdb databases consist of a single database file. Thus, when updating databases mmdb, the operation is completely atomic and the possibility that when updating databases,
+there will be errors associated with the short-term absence of the mmdb file. Since the files are atomically replaced with new ones.
+
+CSV databases consist of multiple files. When updating csv database revisions, each csv file is also replaced atomically, and the chance of a file missing during the update is eliminated. However, when updating the csv databases while the application is running, there is a chance that within a minimum amount of time, one csv file is already new and the other will still have an old version.
+
 COPYRIGHT AND LICENSE
 ---------------------
 
