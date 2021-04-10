@@ -157,8 +157,8 @@ class Client
             return;
         }
         $remoteFileLastModified = date_create($newFileRequestHeaders['last-modified'][0])->getTimestamp();
-        $localFileLastModified = is_file($this->dir . DIRECTORY_SEPARATOR . $editionId . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName) ?
-            (int)file_get_contents($this->dir . DIRECTORY_SEPARATOR . $editionId . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName) : 0;
+        $localFileLastModified = is_file($this->getEditionDirectory($editionId) . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName) ?
+            (int)file_get_contents($this->getEditionDirectory($editionId) . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName) : 0;
 
         if ($remoteFileLastModified !== $localFileLastModified) {
 
@@ -170,7 +170,7 @@ class Client
             if (!empty($this->errorUpdateEditions[$editionId]))
                 return;
 
-            file_put_contents($this->dir . DIRECTORY_SEPARATOR . $editionId . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName, $remoteFileLastModified);
+            file_put_contents($this->getEditionDirectory($editionId) . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName, $remoteFileLastModified);
             $this->updated[] = "$editionId has been updated.";
         } else
             $this->updated[] = "$editionId does not need to be updated.";
@@ -204,7 +204,16 @@ class Client
      */
     private function getArchiveFile($editionId)
     {
-        return $this->dir . DIRECTORY_SEPARATOR . $editionId . '.' . $this->getArchiveType($editionId);
+        return $this->getEditionDirectory($editionId) . '.' . $this->getArchiveType($editionId);
+    }
+
+    /**
+     * @param $editionId
+     * @return string
+     */
+    private function getEditionDirectory($editionId)
+    {
+        return $this->dir . DIRECTORY_SEPARATOR . $editionId;
     }
 
     /**
@@ -264,13 +273,13 @@ class Client
      */
     private function extract($editionId)
     {
-        switch (true) {
-            case $this->getArchiveType($editionId) === self::ARCHIVE_GZ:
+        switch ($this->getArchiveType($editionId)) {
+            case self::ARCHIVE_GZ:
 
                 $phar = new \PharData($this->getArchiveFile($editionId));
                 $phar->extractTo($this->dir, null, true);
                 break;
-            case $this->getArchiveType($editionId) === self::ARCHIVE_ZIP:
+            case self::ARCHIVE_ZIP:
 
                 $zip = new \ZipArchive;
                 $zip->open($this->getArchiveFile($editionId));
@@ -281,12 +290,17 @@ class Client
 
         unlink($this->getArchiveFile($editionId));
 
-        $this->deleteDirectory($this->dir . DIRECTORY_SEPARATOR . $editionId);
+        if (!is_dir($this->getEditionDirectory($editionId)))
+            mkdir($this->getEditionDirectory($editionId));
 
         $directories = new \DirectoryIterator($this->dir);
         foreach ($directories as $directory)
-            if ($directory->isDir() && preg_match('/^' . $editionId . '[_\d]+$/i', $directory->getFilename())){
-                rename($directory->getPathname(), $this->dir . DIRECTORY_SEPARATOR . $editionId);
+            if ($directory->isDir() && preg_match('/^' . $editionId . '[_\d]+$/i', $directory->getFilename())) {
+                $newEditionDirectory = new \DirectoryIterator($directory->getPathname());
+                foreach ($newEditionDirectory as $item)
+                    if (!$item->isDot())
+                        rename($item->getPathname(), $this->getEditionDirectory($editionId) . DIRECTORY_SEPARATOR . $item->getFilename());
+                $this->deleteDirectory($directory->getPathname());
                 break;
             }
     }
