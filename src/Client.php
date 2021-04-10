@@ -204,7 +204,7 @@ class Client
      */
     private function getArchiveFile($editionId)
     {
-        return $this->getEditionDirectory($editionId) . '.' . $this->getArchiveType($editionId);
+        return $this->dir . DIRECTORY_SEPARATOR . $editionId . '.' . $this->getArchiveType($editionId);
     }
 
     /**
