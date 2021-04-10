@@ -111,12 +111,11 @@ See available `Edition ID` databases for updates in [your maxmind.com account](h
 DATABASE UPDATE ATOMICITY
 -------------------------
 
-Currently, the atomicity of the update operation is implemented at the level of individual database files.
+The atomicity of the update operation is implemented at the level of the database files.
 
-The structure of the mmdb and csv databases is different. Mmdb databases consist of a single database file. Thus, when updating databases mmdb, the operation is completely atomic and the possibility that when updating databases,
-there will be errors associated with the short-term absence of the mmdb file. Since the files are atomically replaced with new ones.
+The structure of the mmdb and csv databases is different. Mmdb databases consist of a single database file. Thus, when updating the mmdb databases, the operation is completely atomic and errors associated with the short-term absence of the mmdb file during the database update are excluded. Since the files are atomically replaced with new ones.
 
-CSV databases consist of multiple files. When updating csv database revisions, each csv file is also replaced atomically, and the chance of a file missing during the update is eliminated.
+CSV databases consist of multiple files. When upgrading versions of the CSV database, each CSV file is also replaced atomically, and there is no chance of a file missing during the upgrade.
 
 COPYRIGHT AND LICENSE
 ---------------------
