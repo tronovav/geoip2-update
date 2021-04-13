@@ -57,7 +57,7 @@ Parameters in the `extra` section:
 - `dir` **(required)** - Absolute path to the Geoip2 local database storage directory. Or you can alias part of the path relative to your composer.json. For example `@composer/path-to-db-storage`.
   The script itself will find the absolute path to the `composer.json` file in your project and the `path-to-db-storage` directory for storing Geoip2 databases relative to `composer.json`.
   You can also specify `@composer/../path-to-db-storage`. The main thing is that you yourself understand which path to storing the database you specify.
-- `editions` - List of database editions that you want to update. Maxmind.com offers databases for free download: `GeoLite2-ASN`, `GeoLite2-City`, `GeoLite2-Country`. These editions will be updated by default if you do not fill in the `editions` parameter. Otherwise, only the editions that you specified will be updated. See available editions in [your maxmind.com account](https://www.maxmind.com/en/accounts/current/geoip/downloads/).
+- `editions` - List of database editions that you want to update. Maxmind.com offers databases for free download: `GeoLite2-ASN`, `GeoLite2-City`, `GeoLite2-Country`,` GeoLite2-ASN-CSV`, `GeoLite2-City-CSV`,` GeoLite2-Country-CSV`. If you do not specify the `editions` parameter, then the databases will be updated:` GeoLite2-ASN`, `GeoLite2-City`,` GeoLite2-Country`. Otherwise, only the editions that you specified will be updated. See available editions in [your maxmind.com account](https://www.maxmind.com/en/accounts/current/geoip/downloads/).
 
 ### 2. Updating databases from your php application:
 
@@ -86,7 +86,7 @@ Params:
 
 - `license_key` **(required)** - You can see your license key information on [your account License Keys page](https://support.maxmind.com/account-faq/license-keys/where-do-i-find-my-license-key/) at maxmind.com.
 - `dir` **(required)** - Absolute path to the local storage of Geoip2 databases.
-- `editions` - List of database editions that you want to update. Maxmind.com offers databases for free download: `GeoLite2-ASN`, `GeoLite2-City`, `GeoLite2-Country`. These editions will be updated by default if you do not fill in the `editions` parameter. Otherwise, only the editions that you specified will be updated. See available editions in your maxmind.com account.
+- `editions` - List of database editions that you want to update. Maxmind.com offers databases for free download: `GeoLite2-ASN`, `GeoLite2-City`, `GeoLite2-Country`,` GeoLite2-ASN-CSV`, `GeoLite2-City-CSV`,` GeoLite2-Country-CSV`. If you do not specify the `editions` parameter, then the databases will be updated:` GeoLite2-ASN`, `GeoLite2-City`,` GeoLite2-Country`. Otherwise, only the editions that you specified will be updated. See available editions in [your maxmind.com account](https://www.maxmind.com/en/accounts/current/geoip/downloads/).
 
 Available GeoIP2 `Edition ID` of the databases that you can specify in the `editions` parameter and update.
 
