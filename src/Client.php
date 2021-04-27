@@ -229,7 +229,24 @@ class Client
             CURLOPT_RETURNTRANSFER => true,
         ));
         $header = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
+
+        switch ($http_code){
+            case 200:
+                break;
+            case 401:
+                $this->errorUpdateEditions[$editionId] = "Error downloading \"{$editionId}\". Invalid license key.";
+                break;
+            case 404:
+                $this->errorUpdateEditions[$editionId] = "Edition ID: \"{$editionId}\" not found in maxmind.com. The remote server responded with a \"{$http_code}\" error.";
+                break;
+            case 0:
+                $this->errorUpdateEditions[$editionId] = "Error downloading \"{$editionId}\". The remote server is not available.";
+                break;
+            default:
+                $this->errorUpdateEditions[$editionId] = "Error downloading \"{$editionId}\". The remote server responded with a \"{$http_code}\" error.";
+        }
         return $this->parseHeaders($header);
     }
 
@@ -259,7 +276,7 @@ class Client
      */
     private function parseHeaders($header)
     {
-        $lines = explode("\n", $header);
+        $lines = explode("\n", str_replace("\r\n","\n",$header));
         $headers = array();
         foreach ($lines as $line) {
             $parts = explode(':', $line, 2);
