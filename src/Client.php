@@ -309,7 +309,7 @@ class Client
             if ($directory->isDir() && preg_match('/^' . $editionId . '[_\d]+$/i', $directory->getFilename())) {
                 $newEditionDirectory = new \DirectoryIterator($directory->getPathname());
                 foreach ($newEditionDirectory as $item)
-                    if (!$item->isDot())
+                    if ($item->isFile())
                         rename($item->getPathname(), $this->getEditionDirectory($editionId) . DIRECTORY_SEPARATOR . $item->getFilename());
                 $this->deleteDirectory($directory->getPathname());
                 break;
