@@ -228,7 +228,7 @@ class Client
             CURLOPT_HEADER => true,
             CURLOPT_NOBODY => true,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HEADERFUNCTION => function($curl, $header) use (&$headers){
+            CURLOPT_HEADERFUNCTION => function ($curl, $header) use (&$headers) {
                 $headerArray = explode(':', $header, 2);
                 if (count($headerArray) >= 2) // ignore invalid headers
                     $headers[strtolower(trim($headerArray[0]))][] = trim($headerArray[1]);
@@ -239,7 +239,7 @@ class Client
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
-        switch ($http_code){
+        switch ($http_code) {
             case 200:
                 break;
             case 401:
