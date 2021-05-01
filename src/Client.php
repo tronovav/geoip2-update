@@ -236,23 +236,23 @@ class Client
             }
         ));
         curl_exec($ch);
-        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
-        switch ($http_code) {
+        switch ($httpCode) {
             case 200:
                 break;
             case 401:
                 $this->errorUpdateEditions[$editionId] = "Error downloading \"{$editionId}\". Invalid license key.";
                 break;
             case 404:
-                $this->errorUpdateEditions[$editionId] = "Edition ID: \"{$editionId}\" not found in maxmind.com. The remote server responded with a \"{$http_code}\" error.";
+                $this->errorUpdateEditions[$editionId] = "Edition ID: \"{$editionId}\" not found in maxmind.com. The remote server responded with a \"{$httpCode}\" error.";
                 break;
             case 0:
                 $this->errorUpdateEditions[$editionId] = "Error downloading \"{$editionId}\". The remote server is not available.";
                 break;
             default:
-                $this->errorUpdateEditions[$editionId] = "Error downloading \"{$editionId}\". The remote server responded with a \"{$http_code}\" error.";
+                $this->errorUpdateEditions[$editionId] = "Error downloading \"{$editionId}\". The remote server responded with a \"{$httpCode}\" error.";
         }
         return $headers;
     }
