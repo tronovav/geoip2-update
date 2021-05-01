@@ -306,9 +306,11 @@ class Client
 
         $directories = new \DirectoryIterator($this->dir);
         foreach ($directories as $directory)
+            /* @var \DirectoryIterator $directory */
             if ($directory->isDir() && preg_match('/^' . $editionId . '[_\d]+$/i', $directory->getFilename())) {
                 $newEditionDirectory = new \DirectoryIterator($directory->getPathname());
                 foreach ($newEditionDirectory as $item)
+                    /* @var \DirectoryIterator $item */
                     if ($item->isFile())
                         rename($item->getPathname(), $this->getEditionDirectory($editionId) . DIRECTORY_SEPARATOR . $item->getFilename());
                 $this->deleteDirectory($directory->getPathname());
@@ -325,6 +327,7 @@ class Client
             $directory = new \RecursiveDirectoryIterator($directoryPath, \FilesystemIterator::SKIP_DOTS);
             $children = new \RecursiveIteratorIterator($directory, \RecursiveIteratorIterator::CHILD_FIRST);
             foreach ($children as $child)
+                /* @var \RecursiveDirectoryIterator $child */
                 $child->isDir() ? rmdir($child) : unlink($child);
             rmdir($directoryPath);
         }
