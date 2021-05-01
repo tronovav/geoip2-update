@@ -222,13 +222,22 @@ class Client
      */
     private function headers($editionId)
     {
+        $headers = array();
         $ch = curl_init($this->getRequestUrl($editionId));
         curl_setopt_array($ch, array(
             CURLOPT_HEADER => true,
             CURLOPT_NOBODY => true,
             CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HEADERFUNCTION => function($curl, $header) use (&$headers){
+                $len = strlen($header);
+                $header = explode(':', $header, 2);
+                if (count($header) < 2) // ignore invalid headers
+                    return $len;
+                $headers[strtolower(trim($header[0]))][] = trim($header[1]);
+                return $len;
+            }
         ));
-        $header = curl_exec($ch);
+        curl_exec($ch);
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
@@ -247,7 +256,7 @@ class Client
             default:
                 $this->errorUpdateEditions[$editionId] = "Error downloading \"{$editionId}\". The remote server responded with a \"{$http_code}\" error.";
         }
-        return $this->parseHeaders($header);
+        return $headers;
     }
 
     /**
@@ -268,21 +277,6 @@ class Client
         fclose($fh);
         if ($response === false)
             $this->errorUpdateEditions[$editionId] = "Error download \"{$editionId}\": " . curl_error($ch);
-    }
-
-    /**
-     * @param string $header
-     * @return array
-     */
-    private function parseHeaders($header)
-    {
-        $lines = explode("\n", str_replace("\r\n","\n",$header));
-        $headers = array();
-        foreach ($lines as $line) {
-            $parts = explode(':', $line, 2);
-            $headers[strtolower(trim($parts[0]))][] = isset($parts[1]) ? trim($parts[1]) : null;
-        }
-        return $headers;
     }
 
     /**
