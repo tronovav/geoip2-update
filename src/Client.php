@@ -229,12 +229,10 @@ class Client
             CURLOPT_NOBODY => true,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HEADERFUNCTION => function($curl, $header) use (&$headers){
-                $len = strlen($header);
-                $header = explode(':', $header, 2);
-                if (count($header) < 2) // ignore invalid headers
-                    return $len;
-                $headers[strtolower(trim($header[0]))][] = trim($header[1]);
-                return $len;
+                $headerArray = explode(':', $header, 2);
+                if (count($headerArray) >= 2) // ignore invalid headers
+                    $headers[strtolower(trim($headerArray[0]))][] = trim($headerArray[1]);
+                return strlen($header);
             }
         ));
         curl_exec($ch);
