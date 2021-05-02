@@ -10,6 +10,15 @@
     ],
     "type": "library",
     "license": "MIT",
+    "authors": [
+        {
+            "name": "Andrey Tronov",
+            "email": "newtronov@gmail.com"
+        }
+    ],
+    "support": {
+        "email": "newtronov@gmail.com"
+    },
     "require": {
         "php": ">=5.3.0",
         "ext-curl": "*"
@@ -23,6 +32,10 @@
         }
     },
     "funding": [
+        {
+            "type": "other",
+            "url": "https://donate.stream/tronovav"
+        },
         {
             "type": "other",
             "url": "https://yoomoney.ru/to/410016198845596"
