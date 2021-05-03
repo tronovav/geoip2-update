@@ -25,8 +25,8 @@ If applicable, add screenshots to help explain your problem.
 **Environment (please complete the following information):**
 - OS: [e.g. Windows or Linux or other]
 - PHP version: [e.g. 5.3.0, 7.4.0]
-- Version `tronovav/geoip2-update`: [e.g. v2.1.11]
-- Version `Composer`: [e.g. 2.0.13]
+- `tronovav/geoip2-update` version: [e.g. v2.1.11]
+- Composer version: [e.g. 2.0.13]
 
 **Additional context**
 Add any other context about the problem here.
