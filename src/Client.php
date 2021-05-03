@@ -43,11 +43,11 @@ class Client
      */
     public $dir;
 
-    private $urlApi = 'https://download.maxmind.com/app/geoip_download';
-    private $updated = array();
-    private $errors = array();
-    private $errorUpdateEditions = array();
-    private $remoteEditions = array(
+    protected $urlApi = 'https://download.maxmind.com/app/geoip_download';
+    protected $updated = array();
+    protected $errors = array();
+    protected $errorUpdateEditions = array();
+    protected $remoteEditions = array(
         'GeoLite2-ASN' => self::TYPE_MMDB,
         'GeoLite2-City' => self::TYPE_MMDB,
         'GeoLite2-Country' => self::TYPE_MMDB,
@@ -64,11 +64,11 @@ class Client
         'GeoIP2-City-CSV' => self::TYPE_CSV,
         'GeoIP2-Country-CSV' => self::TYPE_CSV,
     );
-    private $remoteTypes = array(
+    protected $remoteTypes = array(
         self::TYPE_MMDB => self::ARCHIVE_GZ,
         self::TYPE_CSV => self::ARCHIVE_ZIP,
     );
-    private $lastModifiedStorageFileName = 'last-modified.txt';
+    protected $lastModifiedStorageFileName = 'last-modified.txt';
 
     public function __construct(array $params)
     {
@@ -115,7 +115,7 @@ class Client
     /**
      * @return bool
      */
-    private function validate()
+    protected function validate()
     {
         if (!empty($this->errors))
             return false;
@@ -138,7 +138,7 @@ class Client
     /**
      * @param string $editionId
      */
-    private function updateEdition($editionId)
+    protected function updateEdition($editionId)
     {
         if (!array_key_exists($editionId, $this->remoteEditions)) {
             $this->errorUpdateEditions[$editionId] = "The Edition ID: \"{$editionId}\" does not exist or is not currently supported for updating.";
@@ -152,10 +152,6 @@ class Client
         if (!empty($this->errorUpdateEditions[$editionId]))
             return;
 
-        if (empty($newFileRequestHeaders['content-disposition'])) {
-            $this->errorUpdateEditions[$editionId] = "Edition ID: \"{$editionId}\" not found in maxmind.com";
-            return;
-        }
         $remoteFileLastModified = date_create($newFileRequestHeaders['last-modified'][0])->getTimestamp();
         $localFileLastModified = is_file($this->getEditionDirectory($editionId) . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName) ?
             (int)file_get_contents($this->getEditionDirectory($editionId) . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName) : 0;
@@ -180,7 +176,7 @@ class Client
      * @param string $editionId
      * @return string
      */
-    private function getRequestUrl($editionId)
+    protected function getRequestUrl($editionId)
     {
         return $this->urlApi . '?' . http_build_query(array(
                 'edition_id' => $editionId,
@@ -193,7 +189,7 @@ class Client
      * @param string $editionId
      * @return string
      */
-    private function getArchiveType($editionId)
+    protected function getArchiveType($editionId)
     {
         return $this->remoteTypes[$this->remoteEditions[$editionId]];
     }
@@ -202,7 +198,7 @@ class Client
      * @param string $editionId
      * @return string
      */
-    private function getArchiveFile($editionId)
+    protected function getArchiveFile($editionId)
     {
         return $this->dir . DIRECTORY_SEPARATOR . $editionId . '.' . $this->getArchiveType($editionId);
     }
@@ -211,7 +207,7 @@ class Client
      * @param $editionId
      * @return string
      */
-    private function getEditionDirectory($editionId)
+    protected function getEditionDirectory($editionId)
     {
         return $this->dir . DIRECTORY_SEPARATOR . $editionId;
     }
@@ -220,7 +216,7 @@ class Client
      * @param string $editionId
      * @return array
      */
-    private function headers($editionId)
+    protected function headers($editionId)
     {
         $headers = array();
         $ch = curl_init($this->getRequestUrl($editionId));
@@ -254,13 +250,20 @@ class Client
             default:
                 $this->errorUpdateEditions[$editionId] = "Error downloading \"{$editionId}\". The remote server responded with a \"{$httpCode}\" error.";
         }
+
+        if (empty($headers['content-disposition']) && empty($this->errorUpdateEditions[$editionId]))
+            $this->errorUpdateEditions[$editionId] = "Edition ID: \"{$editionId}\" not found in maxmind.com";
+
+        if(!empty($this->errorUpdateEditions[$editionId]))
+            return array();
+
         return $headers;
     }
 
     /**
      * @param string $editionId
      */
-    private function download($editionId)
+    protected function download($editionId)
     {
         $ch = curl_init($this->getRequestUrl($editionId));
         $fh = fopen($this->getArchiveFile($editionId), 'wb');
@@ -280,7 +283,7 @@ class Client
     /**
      * @param string $editionId
      */
-    private function extract($editionId)
+    protected function extract($editionId)
     {
         switch ($this->getArchiveType($editionId)) {
             case self::ARCHIVE_GZ:
@@ -318,7 +321,7 @@ class Client
     /**
      * @param string $directoryPath
      */
-    private function deleteDirectory($directoryPath)
+    protected function deleteDirectory($directoryPath)
     {
         if (is_dir($directoryPath)) {
             $directory = new \RecursiveDirectoryIterator($directoryPath, \FilesystemIterator::SKIP_DOTS);

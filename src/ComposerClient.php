@@ -34,7 +34,7 @@ class ComposerClient
             $params['dir'] = str_replace(array('\\','/'),DIRECTORY_SEPARATOR,$params['dir']);
         }
 
-        $client = new Client($params);
+        $client = new ComposerConsole($params);
         $client->run();
 
         $infoArray = $client->updated();
