@@ -12,27 +12,21 @@ A clear and concise description of what the bug is.
 
 **To Reproduce**
 Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
-
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+1. Updating via Composer or from a php application?
+2. Which editions of the databases you are trying to update?
+3. What configuration settings are you using? (here you can replace the license key "maxmind" with "...").
+4. If you are trying to update databases via Composer, what update messages do you see in the terminal?
+5. If you are trying to update databases via a php application, what messages do you see in `print_r($client->errors());`?
+6. How does the error appear?
 
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
-
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
+**Environment (please complete the following information):**
+- OS: [e.g. Windows or Linux or other]
+- PHP version: [e.g. 5.3.0, 7.4.0]
+- Version `tronovav/geoip2-update`: [e.g. v2.1.11]
+- Version `Composer`: [e.g. 2.0.13]
 
 **Additional context**
 Add any other context about the problem here.
