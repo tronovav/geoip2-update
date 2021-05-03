@@ -241,6 +241,9 @@ class Client
             case 401:
                 $this->errorUpdateEditions[$editionId] = "Error downloading \"{$editionId}\". Invalid license key.";
                 break;
+            case 403:
+                $this->errorUpdateEditions[$editionId] = "Error downloading \"{$editionId}\". Invalid product ID or subscription expired for \"{$editionId}\".";
+                break;
             case 404:
                 $this->errorUpdateEditions[$editionId] = "Edition ID: \"{$editionId}\" not found in maxmind.com. The remote server responded with a \"{$httpCode}\" error.";
                 break;
