@@ -20,7 +20,7 @@
         "email": "newtronov@gmail.com"
     },
     "require": {
-        "php": "^5.3 || ^7.0 || ^8.0",
+        "php": ">=5.3",
         "ext-curl": "*"
     },
     "suggest": {
