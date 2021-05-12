@@ -74,9 +74,11 @@ $client = new \tronovav\GeoIP2Update\Client(array(
 ));
 // run update
 $client->run();
+```
 
-// After updating, you can get information about the result:
+After the update, you can get information about the result, if you need it:
 
+```php
 print_r($client->updated()); // update result
 
 print_r($client->errors()); // update errors
