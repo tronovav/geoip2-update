@@ -10,6 +10,10 @@
 
 namespace tronovav\GeoIP2Update;
 
+/**
+ * These libraries are included in the Composer assembly
+ * and do not need to be included as a dependency when updating databases through Composer.
+ */
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Output\ConsoleOutput;
 
