@@ -10,16 +10,16 @@
 
 namespace tronovav\GeoIP2Update;
 
+use Symfony\Component\Console\Output\ConsoleOutput;
+
 /**
  * Updates databases through a call from Composer.
  * Class ComposerClient
  * @package tronovav\GeoIP2Update
  */
+
 class ComposerClient
 {
-    const FG_GREEN = 32;
-    const FG_RED = 31;
-
     /**
      * Database update launcher via console.
      * @param \Composer\Script\Event $event
@@ -37,25 +37,15 @@ class ComposerClient
         $client = new ComposerConsole($params);
         $client->run();
 
+        $output = new ConsoleOutput();
+
         $infoArray = $client->updated();
-        array_walk($infoArray,function ($info){
-            ComposerClient::write_to_console($info,ComposerClient::FG_GREEN);
+        array_walk($infoArray,function ($info) use ($output){
+            $output->writeln("<info>$info</info>");
         });
-
         $errorsArray = $client->errors();
-        array_walk($errorsArray,function ($error){
-            ComposerClient::write_to_console($error,ComposerClient::FG_RED);
+        array_walk($errorsArray,function ($error) use ($output){
+            $output->writeln("<fg=red>$error</>");
         });
-    }
-
-    /**
-     * @param string $text
-     * @param null|int $color
-     */
-    public static function write_to_console($text, $color = null){
-        if(!is_null($color))
-            fwrite(\STDOUT, "\033[0m" . "\033[" . $color . 'm' . $text . "\033[0m".PHP_EOL);
-        else
-            fwrite(\STDOUT, $text.PHP_EOL);
     }
 }
