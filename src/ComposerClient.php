@@ -45,7 +45,7 @@ class ComposerClient
 
         $infoArray = $client->updated();
         array_walk($infoArray,function ($info) use ($output){
-            $output->writeln("<info>$info</info>");
+            $output->writeln("<fg=green>$info</>");
         });
         $errorsArray = $client->errors();
         array_walk($errorsArray,function ($error) use ($output){
