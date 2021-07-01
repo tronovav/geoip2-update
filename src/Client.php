@@ -72,6 +72,7 @@ class Client
 
     public function __construct(array $params)
     {
+        $this->setConfParams($params);
         $thisClass = new \ReflectionClass($this);
         foreach ($params as $key => $value)
             if ($thisClass->hasProperty($key) && $thisClass->getProperty($key)->isPublic())
@@ -110,6 +111,26 @@ class Client
 
         foreach ($this->editions as $editionId)
             $this->updateEdition($editionId);
+    }
+
+    protected function setConfParams(&$params)
+    {
+        if (array_key_exists('geoipConfFile', $params) && is_file($params['geoipConfFile']) && is_readable($params['geoipConfFile'])) {
+            $confParams = array();
+            foreach (file($params['geoipConfFile']) as $line) {
+                $confString = trim($line);
+                if (preg_match('/^(?P<name>LicenseKey|EditionIDs)[\s]+(?P<value>([\w-]+\s*)+)$/', $confString, $matches)) {
+                    $confParams[$matches['name']] = $matches['name'] === 'EditionIDs'
+                        ? array_values(array_filter(explode(' ', $matches['value']), function ($val) {
+                            return trim($val);
+                        }))
+                        : trim($matches['value']);
+                }
+            }
+            $this->license_key = !empty($confParams['LicenseKey']) ? $confParams['LicenseKey'] : $this->license_key;
+            $this->editions = !empty($confParams['EditionIDs']) ? $confParams['EditionIDs'] : $this->editions;
+            unset($params['geoipConfFile']);
+        }
     }
 
     /**
@@ -257,7 +278,7 @@ class Client
         if (empty($headers['content-disposition']) && empty($this->errorUpdateEditions[$editionId]))
             $this->errorUpdateEditions[$editionId] = "Edition ID: \"{$editionId}\" not found in maxmind.com";
 
-        if(!empty($this->errorUpdateEditions[$editionId]))
+        if (!empty($this->errorUpdateEditions[$editionId]))
             return array();
 
         return $headers;
