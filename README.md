@@ -144,8 +144,8 @@ print_r($client->updated()); // update result
 print_r($client->errors()); // update errors
 ```
 
-AVAILABLE DATABASE TO UPDATE
-----------------------------
+DATABASES AVAILABLE FOR UPDATING
+--------------------------------
 
 Available `Edition ID` databases that you can specify in the `editions` parameter or in the configuration file to update them.
 
