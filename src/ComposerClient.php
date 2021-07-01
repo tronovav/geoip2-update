@@ -39,6 +39,11 @@ class ComposerClient
             $params['dir'] = str_replace(array('\\', '/'), DIRECTORY_SEPARATOR, $params['dir']);
         }
 
+        if (isset($params['geoipConfFile'])) {
+            $params['geoipConfFile'] = realpath(str_replace('@composer', realpath(dirname(\Composer\Factory::getComposerFile())), $params['geoipConfFile']));
+            $params['geoipConfFile'] = str_replace(array('\\', '/'), DIRECTORY_SEPARATOR, $params['geoipConfFile']);
+        }
+
         $client = new ComposerConsole($params);
         $client->run();
 
