@@ -61,7 +61,7 @@ Parameters in the `extra` section:
   You can also specify `@composer/../path-to-db-storage`. The main thing is that you yourself understand which path to storing the database you specify.
 - `editions` - List of database editions that you want to update. Maxmind.com offers databases for free download: `GeoLite2-ASN`, `GeoLite2-City`, `GeoLite2-Country`,` GeoLite2-ASN-CSV`, `GeoLite2-City-CSV`,` GeoLite2-Country-CSV`. If you do not specify the `editions` parameter, then the databases will be updated:` GeoLite2-ASN`, `GeoLite2-City`,` GeoLite2-Country`. Otherwise, only the editions that you specified will be updated. See available editions in [your maxmind.com account](https://www.maxmind.com/en/accounts/current/geoip/downloads/).
 
-**1.1. Use `GeoIP.conf` file:**
+**1.2. Use `GeoIP.conf` file:**
 
 Instead of the parameters `license_key` and` editions`, you can specify the path to the configuration file.
 The configuration file format fully complies with the recommendations of maxmind.com on the documentation page:
@@ -115,7 +115,7 @@ Params:
 - `dir` **(required)** - Absolute path to the local storage of Geoip2 databases.
 - `editions` - List of database editions that you want to update. Maxmind.com offers databases for free download: `GeoLite2-ASN`, `GeoLite2-City`, `GeoLite2-Country`,` GeoLite2-ASN-CSV`, `GeoLite2-City-CSV`,` GeoLite2-Country-CSV`. If you do not specify the `editions` parameter, then the databases will be updated:` GeoLite2-ASN`, `GeoLite2-City`,` GeoLite2-Country`. Otherwise, only the editions that you specified will be updated. See available editions in [your maxmind.com account](https://www.maxmind.com/en/accounts/current/geoip/downloads/).
 
-**1.1. Use `GeoIP.conf` file:**
+**2.2. Use `GeoIP.conf` file:**
 
 Instead of the parameters `license_key` and` editions`, you can specify the path to the configuration file.
 The configuration file format fully complies with the recommendations of maxmind.com on the documentation page:
