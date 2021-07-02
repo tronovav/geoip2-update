@@ -40,5 +40,10 @@
             "type": "other",
             "url": "https://yoomoney.ru/to/410016198845596"
         }
-    ]
+    ],
+    "extra": {
+        "branch-alias": {
+            "dev-master": "dev-branch"
+        }
+    }
 }
