@@ -90,7 +90,7 @@ Parameters in the `extra` section:
   You can also specify `@composer/../path-to-db-storage` or another path relative to your file` composer.json`.
 - `geoipConfFile` **(required)** - The absolute path to the configuration file. Or you can alias part of the path relative to your composer.json. For example `@composer/../GeoIP.conf`.
 
-### 2. Updating databases from your php application:
+### 2. Updating databases from your php application
 
 **2.1. Use in-line configuration options:**
 
