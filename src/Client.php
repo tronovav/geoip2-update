@@ -119,7 +119,7 @@ class Client
             $confParams = array();
             foreach (file($params['geoipConfFile']) as $line) {
                 $confString = trim($line);
-                if (preg_match('/^(?P<name>LicenseKey|EditionIDs)[\s]+(?P<value>([\w-]+\s*)+)$/', $confString, $matches)) {
+                if (preg_match('/^\s*(?P<name>LicenseKey|EditionIDs)\s+(?P<value>([\w-]+\s*)+)$/', $confString, $matches)) {
                     $confParams[$matches['name']] = $matches['name'] === 'EditionIDs'
                         ? array_values(array_filter(explode(' ', $matches['value']), function ($val) {
                             return trim($val);
