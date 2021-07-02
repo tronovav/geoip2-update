@@ -25,7 +25,9 @@ composer require tronovav/geoip2-update
 CONFIGURATION
 -------------
 
-### 1. Updating databases via Composer:
+### 1. Updating databases via Composer
+
+**1.1. Use in-line configuration options:**
 
 To update Geoip2 databases via Composer, you can set up an update call in your `composer.json`.
 Each time the `composer update` command is invoked, the library will check for updates on the "maxmind.com" server and update the Geoip2 databases if necessary.
@@ -59,11 +61,11 @@ Parameters in the `extra` section:
   You can also specify `@composer/../path-to-db-storage`. The main thing is that you yourself understand which path to storing the database you specify.
 - `editions` - List of database editions that you want to update. Maxmind.com offers databases for free download: `GeoLite2-ASN`, `GeoLite2-City`, `GeoLite2-Country`,` GeoLite2-ASN-CSV`, `GeoLite2-City-CSV`,` GeoLite2-Country-CSV`. If you do not specify the `editions` parameter, then the databases will be updated:` GeoLite2-ASN`, `GeoLite2-City`,` GeoLite2-Country`. Otherwise, only the editions that you specified will be updated. See available editions in [your maxmind.com account](https://www.maxmind.com/en/accounts/current/geoip/downloads/).
 
+**1.1. Use `GeoIP.conf` file:**
+
 Instead of the parameters `license_key` and` editions`, you can specify the path to the configuration file.
 The configuration file format fully complies with the recommendations of maxmind.com on the documentation page:
 [Obtain GeoIP.conf with Account Information](https://dev.maxmind.com/geoip/updating-databases?lang=en#2-obtain-geoipconf-with-account-information)
-
-Example using a config file:
 
 ```json
 # composer.json
@@ -90,6 +92,8 @@ Parameters in the `extra` section:
 
 ### 2. Updating databases from your php application:
 
+**2.1. Use in-line configuration options:**
+
 ```php
 <?php
 
@@ -111,11 +115,12 @@ Params:
 - `dir` **(required)** - Absolute path to the local storage of Geoip2 databases.
 - `editions` - List of database editions that you want to update. Maxmind.com offers databases for free download: `GeoLite2-ASN`, `GeoLite2-City`, `GeoLite2-Country`,` GeoLite2-ASN-CSV`, `GeoLite2-City-CSV`,` GeoLite2-Country-CSV`. If you do not specify the `editions` parameter, then the databases will be updated:` GeoLite2-ASN`, `GeoLite2-City`,` GeoLite2-Country`. Otherwise, only the editions that you specified will be updated. See available editions in [your maxmind.com account](https://www.maxmind.com/en/accounts/current/geoip/downloads/).
 
+**1.1. Use `GeoIP.conf` file:**
+
 Instead of the parameters `license_key` and` editions`, you can specify the path to the configuration file.
 The configuration file format fully complies with the recommendations of maxmind.com on the documentation page:
 [Obtain GeoIP.conf with Account Information](https://dev.maxmind.com/geoip/updating-databases?lang=en#2-obtain-geoipconf-with-account-information)
 
-Example using a config file:
 
 ```php
 <?php
