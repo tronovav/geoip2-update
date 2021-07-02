@@ -43,7 +43,7 @@
     ],
     "extra": {
         "branch-alias": {
-            "dev-main": "branch-dev"
+            "dev-main": "dev-branch"
         }
     }
 }
