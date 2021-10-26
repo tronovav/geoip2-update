@@ -42,6 +42,11 @@ class Client
      * @var string Destination directory. Directory where your copies of databases are stored. Your old databases will be updated there.
      */
     public $dir;
+    
+    /**
+     * @var string Location of GeoIP.conf file.
+     */
+    public $geoipConfFile;
 
     protected $urlApi = 'https://download.maxmind.com/app/geoip_download';
     protected $updated = array();
