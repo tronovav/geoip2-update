@@ -1,0 +1,35 @@
+{
+    "name": "tronovav/geoip2-update",
+    "description": "Update GeoIP2/GeoLite2 databases from your script, program or via composer.",
+    "keywords": [
+        "geoip",
+        "geoip2",
+        "geolite2",
+        "geolocation",
+        "maxmind"
+    ],
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Andrey Tronov",
+            "email": "newtronov@gmail.com"
+        }
+    ],
+    "support": {
+        "email": "newtronov@gmail.com"
+    },
+    "require": {
+        "php": ">=5.3",
+        "ext-curl": "*",
+        "ext-json": "*"
+    },
+    "suggest": {
+        "ext-zip": "Required for updating the CSV databases."
+    },
+    "autoload": {
+        "psr-4": {
+            "tronovav\\GeoIP2Update\\": "src/"
+        }
+    }
+}
