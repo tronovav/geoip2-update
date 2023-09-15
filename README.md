@@ -10,7 +10,7 @@ DOCUMENTATION
 
 You can read the documentation on setting up and using the library, as well as learn about new features on the official website.
 
-**Go to documentation -> [www.geoip2-update.com](https://www.geodbase-update.com/?utm_source=github&utm_medium=organic&utm_campaign=github_project_page&utm_content=documentation_link)**
+**Go to documentation -> [GeoIP2 Update Documentation](https://www.geodbase-update.com/?utm_source=github&utm_medium=organic&utm_campaign=github_project_page&utm_content=documentation_link)**
 
 FEATURES
 --------
