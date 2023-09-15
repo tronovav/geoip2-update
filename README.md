@@ -1,4 +1,4 @@
-[![Geoip2 Update](https://user-images.githubusercontent.com/25905384/111375423-4631ce00-86af-11eb-81a9-2bc4dab89068.png)](https://www.geoip2-update.com/?utm_source=github&utm_medium=organic&utm_campaign=github_project_page&utm_content=main_banner)
+[![Geoip2 Update](https://user-images.githubusercontent.com/25905384/111375423-4631ce00-86af-11eb-81a9-2bc4dab89068.png)](https://www.geodbase-update.com/?utm_source=github&utm_medium=organic&utm_campaign=github_project_page&utm_content=main_banner)
 
 Geoip2 Update is a PHP tool for updating Maxmind GeoLite2 and GeoIP2 databases from your script, application or via Composer.
 
@@ -10,7 +10,7 @@ DOCUMENTATION
 
 You can read the documentation on setting up and using the library, as well as learn about new features on the official website.
 
-**Go to documentation -> [www.geoip2-update.com](https://www.geoip2-update.com/?utm_source=github&utm_medium=organic&utm_campaign=github_project_page&utm_content=documentation_link)**
+**Go to documentation -> [www.geoip2-update.com](https://www.geodbase-update.com/?utm_source=github&utm_medium=organic&utm_campaign=github_project_page&utm_content=documentation_link)**
 
 FEATURES
 --------
