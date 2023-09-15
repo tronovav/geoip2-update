@@ -41,7 +41,7 @@ class Client
     public $dir;
 
     protected $_editionVersions = array();
-    protected $_baseUrlApi = 'https://www.geoip2-update.com/api/v1/edition';
+    protected $_baseUrlApi = 'https://www.geodbase-update.com/api/v1/edition';
     protected $_updated = array();
     protected $_errors = array();
     protected $_errorUpdateEditions = array();
