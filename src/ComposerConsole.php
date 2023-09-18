@@ -30,9 +30,8 @@ class ComposerConsole extends Client
     protected function download($remoteEditionData)
     {
         $editionId = $remoteEditionData['id'];
-        $action = empty($this->_editionVersions[$editionId][0]) ? 'Installing' : 'Updating';
         $progressBar = new ProgressBar((new ConsoleOutput()), 100);
-        $progressBar->setFormat("  - $action <fg=green>$editionId</>: [%bar%] %percent:3s%%");
+        $progressBar->setFormat("  - Downloading <fg=green>$editionId</>: [%bar%] %percent:3s%%");
         $progressBar->setRedrawFrequency(1);
         $progressBar->start();
         $progressBarFinish = false;
@@ -80,7 +79,8 @@ class ComposerConsole extends Client
         if ($response === false || $httpCode !== 200){
             if(is_file($this->getArchiveFile($remoteEditionData)))
                 unlink($this->getArchiveFile($remoteEditionData));
-            $this->_errorUpdateEditions[$remoteEditionData['id']] = "Download error: ($httpCode)" . curl_error($ch);
+            $this->_errorUpdateEditions[$remoteEditionData['id']] = "$editionId: download error. Remote server response code \"$httpCode\".";
+            echo PHP_EOL;
         }
     }
 }

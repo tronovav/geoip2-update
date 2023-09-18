@@ -55,7 +55,7 @@ class Client
             if ($thisClass->hasProperty($key) && $thisClass->getProperty($key)->isPublic())
                 $this->$key = $value;
             else
-                $this->_errors[] = "The \"{$key}\" parameter does not exist. Just remove it from the options. See https://github.com/tronovav/geoip2-update";
+                $this->_errors[] = "The \"{$key}\" parameter does not exist. Just remove it from the options. See https://www.geodbase-update.com";
 
         $this->editions = array_unique((array)$this->editions);
     }
@@ -110,7 +110,7 @@ class Client
                 $this->editions = !empty($confParams['EditionIDs']) ? $confParams['EditionIDs'] : $this->editions;
             }
             else{
-                $this->_errors[] = 'The geoipConfFile parameter was specified, but the file itself is missing or unreadable. See https://github.com/tronovav/geoip2-update';
+                $this->_errors[] = 'The geoipConfFile parameter was specified, but the file itself is missing or unreadable. See https://www.geodbase-update.com';
             }
             unset($params['geoipConfFile']);
         }
@@ -128,10 +128,10 @@ class Client
             $this->_errors[] = sprintf("Destination directory %s.", (empty($this->dir) ? "not specified" : "$this->dir is not writable"));
 
         if (empty($this->license_key))
-            $this->_errors[] = "You must specify your license_key https://support.maxmind.com/account-faq/license-keys/where-do-i-find-my-license-key/";
+            $this->_errors[] = "You must specify your license_key. See https://www.geodbase-update.com";
 
         if (empty($this->editions))
-            $this->_errors[] = "No GeoIP revision names are specified for the update. Specify the \"editions\" parameter in the config. See https://github.com/tronovav/geoip2-update";
+            $this->_errors[] = "No GeoIP revision names are specified for the update. Specify the \"editions\" parameter in the config. See https://www.geodbase-update.com";
 
         if (!empty($this->_errors))
             return false;

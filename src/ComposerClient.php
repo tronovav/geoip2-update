@@ -58,10 +58,10 @@ class ComposerClient
         $errorsArray = $client->errors();
 
         if(!empty($errorsArray))
-            $output->writeln("<fg=red>GeoIP2 database update error:</>");
+            $output->writeln("<fg=red>GeoIP2 database update errors:</>");
 
         array_walk($errorsArray, function ($error) use ($output) {
-            $output->writeln("<fg=red>- $error</>");
+            $output->writeln("<fg=red>  - $error</>");
         });
     }
 }
