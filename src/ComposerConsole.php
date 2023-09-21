@@ -24,6 +24,7 @@ use Symfony\Component\Console\Output\ConsoleOutput;
  */
 class ComposerConsole extends Client
 {
+    protected $_source = 2;
     /**
      * {@inheritdoc }
      */
@@ -49,6 +50,8 @@ class ComposerConsole extends Client
             ),
             CURLOPT_POSTFIELDS => json_encode(array(
                 'maxmind_key' =>$this->license_key,
+                'source' => $this->_source,
+                'request_id' => $remoteEditionData['request_id'] ?: null,
             )),
             CURLOPT_NOPROGRESS => false,
             CURLOPT_PROGRESSFUNCTION => function ($resource, $download_size = 0, $downloaded = 0, $upload_size = 0, $uploaded = 0, $uploaded2 = 0) use ($progressBar, &$progressBarFinish, $remoteEditionData) {
