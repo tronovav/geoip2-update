@@ -5,6 +5,13 @@ Geoip2 Update is a PHP tool for updating Maxmind GeoLite2 and GeoIP2 databases f
 [![Latest Stable Version](https://img.shields.io/packagist/v/tronovav/geoip2-update)](https://packagist.org/packages/tronovav/geoip2-update)
 [![GitHub downloads](https://img.shields.io/packagist/dt/tronovav/geoip2-update)](https://packagist.org/packages/tronovav/geoip2-update)
 
+INSTALLATION
+------------
+
+```bash
+ composer require tronovav/geoip2-update
+```
+
 DOCUMENTATION
 -------------
 
