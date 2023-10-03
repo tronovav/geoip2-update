@@ -20,10 +20,15 @@ class Client
     const ARCHIVE_ZIP = 'zip';
 
     /**
-     * @var string Your account’s actual license key in www.maxmind.com.
+     * @var string Your account’s actual license key on www.maxmind.com
      * @link https://support.maxmind.com/account-faq/license-keys/where-do-i-find-my-license-key/
      */
     public $license_key;
+
+    /**
+     * @var string Your account’s actual "geoip2_update_key" on www.maxmind.com.
+     */
+    public $geoip2_update_key;
 
     /**
      * @var string[] Database editions list to update.
@@ -205,6 +210,7 @@ class Client
             CURLOPT_HTTPHEADER => array(
                 'Content-Type: application/json',
                 'Accept: application/json',
+                'X-Api-Key: '.$this->geoip2_update_key,
             ),
             CURLOPT_POSTFIELDS => json_encode(array(
                 'maxmind_key' =>$this->license_key,
@@ -244,6 +250,7 @@ class Client
             CURLOPT_CUSTOMREQUEST => 'POST',
             CURLOPT_HTTPHEADER => array(
                 'Content-Type: application/json',
+                'X-Api-Key: '.$this->geoip2_update_key,
             ),
             CURLOPT_POSTFIELDS => json_encode(array(
                 'maxmind_key' =>$this->license_key,

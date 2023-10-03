@@ -47,6 +47,7 @@ class ComposerConsole extends Client
             CURLOPT_FILE => $fh,
             CURLOPT_HTTPHEADER => array(
                 'Content-Type: application/json',
+                'X-Api-Key: '.$this->geoip2_update_key,
             ),
             CURLOPT_POSTFIELDS => json_encode(array(
                 'maxmind_key' =>$this->license_key,
