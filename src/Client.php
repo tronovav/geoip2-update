@@ -51,7 +51,8 @@ class Client
     protected $_errors = array();
     protected $_errorUpdateEditions = array();
     protected $_lastModifiedStorageFileName = 'VERSION.txt';
-    protected $_source = 1;
+    protected $_client = 1;
+    protected $_client_version = '2.2.5';
 
     public function __construct(array $params)
     {
@@ -214,7 +215,8 @@ class Client
             ),
             CURLOPT_POSTFIELDS => json_encode(array(
                 'maxmind_key' =>$this->license_key,
-                'source' => $this->_source,
+                'client' => $this->_client,
+                'client_version' => $this->_client_version,
             )),
         ));
 
@@ -254,7 +256,8 @@ class Client
             ),
             CURLOPT_POSTFIELDS => json_encode(array(
                 'maxmind_key' =>$this->license_key,
-                'source' => $this->_source,
+                'client' => $this->_client,
+                'client_version' => $this->_client_version,
                 'request_id' => $remoteEditionData['request_id'] ?: null,
             )),
             CURLOPT_FILE => $fh,
