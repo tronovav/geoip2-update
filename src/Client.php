@@ -51,7 +51,8 @@ class Client
     protected $_errors = array();
     protected $_errorUpdateEditions = array();
     protected $_lastModifiedStorageFileName = 'VERSION.txt';
-    protected $_source = 1;
+    protected $_client = 1;
+    protected $_client_version = '2.2.5';
 
     public function __construct(array $params)
     {
@@ -130,14 +131,22 @@ class Client
         if (!empty($this->_errors))
             return false;
 
-        if (!is_dir($this->dir) || !is_writable($this->dir))
-            $this->_errors[] = sprintf("Destination directory %s.", (empty($this->dir) ? "not specified" : "$this->dir is not writable"));
+        switch (true) {
+            case empty($this->dir):
+                $this->_errors[] = 'Destination directory not specified. See documentation at https://www.geodbase-update.com';
+                break;
+            case !is_dir($this->dir):
+                $this->_errors[] = "The destination directory \"{$this->dir}\" does not exist. See documentation at https://www.geodbase-update.com";
+                break;
+            case !is_writable($this->dir):
+                $this->_errors[] = "The destination directory \"{$this->dir}\" is not writable. See documentation at https://www.geodbase-update.com";
+        }
 
         if (empty($this->license_key))
-            $this->_errors[] = "You must specify your license_key. See https://www.geodbase-update.com";
+            $this->_errors[] = 'You must specify your Maxmind "license_key". See documentation at https://www.geodbase-update.com';
 
         if (empty($this->editions))
-            $this->_errors[] = "No GeoIP revision names are specified for the update. Specify the \"editions\" parameter in the config. See https://www.geodbase-update.com";
+            $this->_errors[] = "No GeoIP revision names are specified for the update. See documentation at https://www.geodbase-update.com";
 
         if (!empty($this->_errors))
             return false;
@@ -214,7 +223,8 @@ class Client
             ),
             CURLOPT_POSTFIELDS => json_encode(array(
                 'maxmind_key' =>$this->license_key,
-                'source' => $this->_source,
+                'client' => $this->_client,
+                'client_version' => $this->_client_version,
             )),
         ));
 
@@ -254,7 +264,8 @@ class Client
             ),
             CURLOPT_POSTFIELDS => json_encode(array(
                 'maxmind_key' =>$this->license_key,
-                'source' => $this->_source,
+                'client' => $this->_client,
+                'client_version' => $this->_client_version,
                 'request_id' => $remoteEditionData['request_id'] ?: null,
             )),
             CURLOPT_FILE => $fh,

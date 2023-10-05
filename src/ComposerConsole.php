@@ -24,7 +24,7 @@ use Symfony\Component\Console\Output\ConsoleOutput;
  */
 class ComposerConsole extends Client
 {
-    protected $_source = 2;
+    protected $_client = 2;
     /**
      * {@inheritdoc }
      */
@@ -51,7 +51,8 @@ class ComposerConsole extends Client
             ),
             CURLOPT_POSTFIELDS => json_encode(array(
                 'maxmind_key' =>$this->license_key,
-                'source' => $this->_source,
+                'client' => $this->_client,
+                'client_version' => $this->_client_version,
                 'request_id' => $remoteEditionData['request_id'] ?: null,
             )),
             CURLOPT_NOPROGRESS => false,
