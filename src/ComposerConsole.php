@@ -37,24 +37,18 @@ class ComposerConsole extends Client
         $progressBar->start();
         $progressBarFinish = false;
 
-        $ch = curl_init(trim($this->_baseUrlApi,'/').'/'.'edition-download'.'?'. http_build_query(array(
-            'id' => $remoteEditionData['id'],
+        $ch = curl_init(trim($this->_baseUrlApi,'/').'/'.'download'.'?'. http_build_query(array(
+            'request_id' => $remoteEditionData['request_id'],
         )));
         $fh = fopen($this->getArchiveFile($remoteEditionData), 'wb');
         curl_setopt_array($ch, array(
-            CURLOPT_HEADER => false,
-            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_CUSTOMREQUEST => 'GET',
+            CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_FILE => $fh,
             CURLOPT_HTTPHEADER => array(
                 'Content-Type: application/json',
-                'X-Api-Key: '.$this->geoip2_update_key,
+                'X-Api-Key: '.$this->geodbase_update_key,
             ),
-            CURLOPT_POSTFIELDS => json_encode(array(
-                'maxmind_key' =>$this->license_key,
-                'client' => $this->_client,
-                'client_version' => $this->_client_version,
-                'request_id' => $remoteEditionData['request_id'] ?: null,
-            )),
             CURLOPT_NOPROGRESS => false,
             CURLOPT_PROGRESSFUNCTION => function ($resource, $download_size = 0, $downloaded = 0, $upload_size = 0, $uploaded = 0, $uploaded2 = 0) use ($progressBar, &$progressBarFinish, $remoteEditionData) {
                 /**
@@ -66,7 +60,7 @@ class ComposerConsole extends Client
                     $downloaded = $download_size;
 
                 $download_size = $remoteEditionData['length'];
-                
+
                 if ($download_size && !$progressBarFinish)
                     if ($downloaded < $download_size)
                         $progressBar->setProgress(round(($downloaded / $download_size) * 100,0,PHP_ROUND_HALF_DOWN));

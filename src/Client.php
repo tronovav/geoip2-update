@@ -26,9 +26,10 @@ class Client
     public $license_key;
 
     /**
-     * @var string Your account’s actual "geoip2_update_key" on www.maxmind.com.
+     * @var string Your account’s actual "geodbase_update_key" on www.geodbase-update.com
+     * @link https://www.geodbase-update.com
      */
-    public $geoip2_update_key;
+    public $geodbase_update_key;
 
     /**
      * @var string[] Database editions list to update.
@@ -52,7 +53,7 @@ class Client
     protected $_errorUpdateEditions = array();
     protected $_lastModifiedStorageFileName = 'VERSION.txt';
     protected $_client = 1;
-    protected $_client_version = '2.2.5';
+    protected $_client_version = '2.3.0';
 
     public function __construct(array $params)
     {
@@ -209,7 +210,7 @@ class Client
      */
     protected function getRemoteEditionData($editionId)
     {
-        $ch = curl_init(trim($this->_baseUrlApi,'/').'/'.'edition-data'.'?'. http_build_query(array(
+        $ch = curl_init(trim($this->_baseUrlApi,'/').'/'.'data'.'?'. http_build_query(array(
             'id' => $editionId,
         )));
         curl_setopt_array($ch, array(
@@ -219,7 +220,7 @@ class Client
             CURLOPT_HTTPHEADER => array(
                 'Content-Type: application/json',
                 'Accept: application/json',
-                'X-Api-Key: '.$this->geoip2_update_key,
+                'X-Api-Key: '.$this->geodbase_update_key,
             ),
             CURLOPT_POSTFIELDS => json_encode(array(
                 'maxmind_key' =>$this->license_key,
@@ -238,7 +239,7 @@ class Client
         }
 
         $resultArray = json_decode($result,true);
-        
+
         if($httpCode !== 200){
             $this->_errorUpdateEditions[$editionId] = $resultArray['data']['message'] ?: $resultArray['data']['name'];
             return array();
@@ -251,23 +252,17 @@ class Client
      */
     protected function download($remoteEditionData)
     {
-        $ch = curl_init(trim($this->_baseUrlApi,'/').'/'.'edition-download'.'?'. http_build_query(array(
-            'id' => $remoteEditionData['id'],
+        $ch = curl_init(trim($this->_baseUrlApi,'/').'/'.'download'.'?'. http_build_query(array(
+            'request_id' => $remoteEditionData['request_id'],
         )));
         $fh = fopen($this->getArchiveFile($remoteEditionData), 'wb');
         curl_setopt_array($ch, array(
-            CURLOPT_HEADER => false,
-            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_CUSTOMREQUEST => 'GET',
+            CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_HTTPHEADER => array(
                 'Content-Type: application/json',
-                'X-Api-Key: '.$this->geoip2_update_key,
+                'X-Api-Key: '.$this->geodbase_update_key,
             ),
-            CURLOPT_POSTFIELDS => json_encode(array(
-                'maxmind_key' =>$this->license_key,
-                'client' => $this->_client,
-                'client_version' => $this->_client_version,
-                'request_id' => $remoteEditionData['request_id'] ?: null,
-            )),
             CURLOPT_FILE => $fh,
         ));
         $response = curl_exec($ch);
