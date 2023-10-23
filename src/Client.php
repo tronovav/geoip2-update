@@ -222,6 +222,7 @@ class Client
                 'Accept: application/json',
                 'X-Api-Key: '.$this->geodbase_update_key,
             ),
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_POSTFIELDS => json_encode(array(
                 'maxmind_key' =>$this->license_key,
                 'client' => $this->_client,

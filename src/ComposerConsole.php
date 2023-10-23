@@ -49,6 +49,7 @@ class ComposerConsole extends Client
                 'Content-Type: application/json',
                 'X-Api-Key: '.$this->geodbase_update_key,
             ),
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_NOPROGRESS => false,
             CURLOPT_PROGRESSFUNCTION => function ($resource, $download_size = 0, $downloaded = 0, $upload_size = 0, $uploaded = 0, $uploaded2 = 0) use ($progressBar, &$progressBarFinish, $remoteEditionData) {
                 /**
