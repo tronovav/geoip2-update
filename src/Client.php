@@ -53,7 +53,7 @@ class Client
     protected $_errorUpdateEditions = array();
     protected $_lastModifiedStorageFileName = 'VERSION.txt';
     protected $_client = 1;
-    protected $_client_version = '2.3.0';
+    protected $_client_version = '2.3.1';
 
     public function __construct(array $params)
     {
