@@ -30,15 +30,5 @@
         "psr-4": {
             "tronovav\\GeoIP2Update\\": "src/"
         }
-    },
-    "funding": [
-        {
-            "type": "other",
-            "url": "https://donate.stream/tronovav"
-        },
-        {
-            "type": "other",
-            "url": "https://yoomoney.ru/to/410016198845596"
-        }
-    ]
+    }
 }
