@@ -18,48 +18,39 @@ namespace tronovav\GeoIP2Update;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Output\ConsoleOutput;
 
-/**
- * Class ComposerClient
- * @package tronovav\GeoIP2Update
- */
 class ComposerConsole extends Client
 {
-    protected $_client = 2;
     /**
-     * {@inheritdoc }
+     * @param string $editionId
      */
-    protected function download($remoteEditionData)
+    protected function download($editionId)
     {
-        $editionId = $remoteEditionData['id'];
         $progressBar = new ProgressBar((new ConsoleOutput()), 100);
-        $progressBar->setFormat("  - Downloading <fg=green>$editionId</>: [%bar%] %percent:3s%%");
+        $progressBar->setFormat("  - Upgrading $editionId: [%bar%] %percent:3s%%");
         $progressBar->setRedrawFrequency(1);
         $progressBar->start();
         $progressBarFinish = false;
 
-        $ch = curl_init(trim($this->_baseUrlApi,'/').'/'.'download'.'?'. http_build_query(array(
-            'request_id' => $remoteEditionData['request_id'],
-        )));
-        $fh = fopen($this->getArchiveFile($remoteEditionData), 'wb');
+        $ch = curl_init($this->getRequestUrl($editionId));
+        $fh = fopen($this->getArchiveFile($editionId), 'wb');
         curl_setopt_array($ch, array(
-            CURLOPT_CUSTOMREQUEST => 'GET',
-            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTPGET => true,
+            CURLOPT_BINARYTRANSFER => true,
+            CURLOPT_HEADER => false,
             CURLOPT_FILE => $fh,
-            CURLOPT_HTTPHEADER => array(
-                'Content-Type: application/json',
-                'X-Api-Key: '.$this->geodbase_update_key,
-            ),
             CURLOPT_NOPROGRESS => false,
-            CURLOPT_PROGRESSFUNCTION => function ($resource, $download_size = 0, $downloaded = 0, $upload_size = 0, $uploaded = 0, $uploaded2 = 0) use ($progressBar, &$progressBarFinish, $remoteEditionData) {
+            CURLOPT_PROGRESSFUNCTION => function ($resource, $download_size = 0, $downloaded = 0, $upload_size = 0, $uploaded = 0) use ($progressBar, &$progressBarFinish) {
                 /**
                  * $resource parameter was added in version 5.5.0 breaking backwards compatibility;
                  * if we are using PHP version lower than 5.5.0, we need to shift the arguments
                  * @see http://php.net/manual/en/function.curl-setopt.php#refsect1-function.curl-setopt-changelog
                  */
-                if (version_compare(PHP_VERSION, '5.5.0') < 0)
+                if (version_compare(PHP_VERSION, '5.5.0') < 0) {
+                    $uploaded = $upload_size;
+                    $upload_size = $downloaded;
                     $downloaded = $download_size;
-
-                $download_size = $remoteEditionData['length'];
+                    $download_size = $resource;
+                }
 
                 if ($download_size && !$progressBarFinish)
                     if ($downloaded < $download_size)
@@ -72,14 +63,9 @@ class ComposerConsole extends Client
             }
         ));
         $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
         fclose($fh);
-        if ($response === false || $httpCode !== 200){
-            if(is_file($this->getArchiveFile($remoteEditionData)))
-                unlink($this->getArchiveFile($remoteEditionData));
-            $this->_errorUpdateEditions[$remoteEditionData['id']] = "$editionId: download error. Remote server response code \"$httpCode\".";
-            echo PHP_EOL;
-        }
+        if ($response === false)
+            $this->errorUpdateEditions[$editionId] = "Error download \"{$editionId}\": " . curl_error($ch);
     }
 }
