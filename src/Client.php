@@ -16,20 +16,17 @@ namespace tronovav\GeoIP2Update;
  */
 class Client
 {
+    const TYPE_MMDB = 'mmdb';
+    const TYPE_CSV = 'csv';
+
     const ARCHIVE_GZ = 'tar.gz';
     const ARCHIVE_ZIP = 'zip';
 
     /**
-     * @var string Your account’s actual license key on www.maxmind.com
+     * @var string Your accountвЂ™s actual license key in www.maxmind.com.
      * @link https://support.maxmind.com/account-faq/license-keys/where-do-i-find-my-license-key/
      */
     public $license_key;
-
-    /**
-     * @var string Your account’s actual "geodbase_update_key" on www.geodbase-update.com
-     * @link https://www.geodbase-update.com
-     */
-    public $geodbase_update_key;
 
     /**
      * @var string[] Database editions list to update.
@@ -46,14 +43,32 @@ class Client
      */
     public $dir;
 
-    protected $_editionVersions = array();
-    protected $_baseUrlApi = 'https://www.geodbase-update.com/api/v1/edition';
-    protected $_updated = array();
-    protected $_errors = array();
-    protected $_errorUpdateEditions = array();
-    protected $_lastModifiedStorageFileName = 'VERSION.txt';
-    protected $_client = 1;
-    protected $_client_version = '2.3.1';
+    protected $urlApi = 'https://download.maxmind.com/app/geoip_download';
+    protected $updated = array();
+    protected $errors = array();
+    protected $errorUpdateEditions = array();
+    protected $remoteEditions = array(
+        'GeoLite2-ASN' => self::TYPE_MMDB,
+        'GeoLite2-City' => self::TYPE_MMDB,
+        'GeoLite2-Country' => self::TYPE_MMDB,
+
+        'GeoIP2-ASN' => self::TYPE_MMDB,
+        'GeoIP2-City' => self::TYPE_MMDB,
+        'GeoIP2-Country' => self::TYPE_MMDB,
+
+        'GeoLite2-ASN-CSV' => self::TYPE_CSV,
+        'GeoLite2-City-CSV' => self::TYPE_CSV,
+        'GeoLite2-Country-CSV' => self::TYPE_CSV,
+
+        'GeoIP2-ASN-CSV' => self::TYPE_CSV,
+        'GeoIP2-City-CSV' => self::TYPE_CSV,
+        'GeoIP2-Country-CSV' => self::TYPE_CSV,
+    );
+    protected $remoteTypes = array(
+        self::TYPE_MMDB => self::ARCHIVE_GZ,
+        self::TYPE_CSV => self::ARCHIVE_ZIP,
+    );
+    protected $lastModifiedStorageFileName = 'last-modified.txt';
 
     public function __construct(array $params)
     {
@@ -63,7 +78,7 @@ class Client
             if ($thisClass->hasProperty($key) && $thisClass->getProperty($key)->isPublic())
                 $this->$key = $value;
             else
-                $this->_errors[] = "The \"{$key}\" parameter does not exist. Just remove it from the options. See https://www.geodbase-update.com";
+                $this->errors[] = "The \"{$key}\" parameter does not exist. Just remove it from the options. See https://github.com/tronovav/geoip2-update";
 
         $this->editions = array_unique((array)$this->editions);
     }
@@ -74,7 +89,7 @@ class Client
      */
     public function updated()
     {
-        return $this->_updated;
+        return $this->updated;
     }
 
     /**
@@ -83,12 +98,11 @@ class Client
      */
     public function errors()
     {
-        return array_merge($this->_errors, array_values($this->_errorUpdateEditions));
+        return array_merge($this->errors, array_values($this->errorUpdateEditions));
     }
 
     /**
      * Database update launcher.
-     * @throws \Exception
      */
     public function run()
     {
@@ -118,7 +132,7 @@ class Client
                 $this->editions = !empty($confParams['EditionIDs']) ? $confParams['EditionIDs'] : $this->editions;
             }
             else{
-                $this->_errors[] = 'The geoipConfFile parameter was specified, but the file itself is missing or unreadable. See https://www.geodbase-update.com';
+                $this->errors[] = 'The geoipConfFile parameter was specified, but the file itself is missing or unreadable. See https://github.com/tronovav/geoip2-update';
             }
             unset($params['geoipConfFile']);
         }
@@ -129,27 +143,19 @@ class Client
      */
     protected function validate()
     {
-        if (!empty($this->_errors))
+        if (!empty($this->errors))
             return false;
 
-        switch (true) {
-            case empty($this->dir):
-                $this->_errors[] = 'Destination directory not specified. See documentation at https://www.geodbase-update.com';
-                break;
-            case !is_dir($this->dir):
-                $this->_errors[] = "The destination directory \"{$this->dir}\" does not exist. See documentation at https://www.geodbase-update.com";
-                break;
-            case !is_writable($this->dir):
-                $this->_errors[] = "The destination directory \"{$this->dir}\" is not writable. See documentation at https://www.geodbase-update.com";
-        }
+        if (!is_dir($this->dir) || !is_writable($this->dir))
+            $this->errors[] = sprintf("Destination directory %s.", (empty($this->dir) ? "not specified" : "$this->dir is not writable"));
 
         if (empty($this->license_key))
-            $this->_errors[] = 'You must specify your Maxmind "license_key". See documentation at https://www.geodbase-update.com';
+            $this->errors[] = "You must specify your license_key https://support.maxmind.com/account-faq/license-keys/where-do-i-find-my-license-key/";
 
         if (empty($this->editions))
-            $this->_errors[] = "No GeoIP revision names are specified for the update. See documentation at https://www.geodbase-update.com";
+            $this->errors[] = "No GeoIP revision names are specified for the update. Specify the \"editions\" parameter in the config. See https://github.com/tronovav/geoip2-update";
 
-        if (!empty($this->_errors))
+        if (!empty($this->errors))
             return false;
 
         return true;
@@ -157,42 +163,70 @@ class Client
 
     /**
      * @param string $editionId
-     * @throws \Exception
      */
     protected function updateEdition($editionId)
     {
-        $remoteEditionData = $this->getRemoteEditionData($editionId);
-
-        if (!empty($this->_errorUpdateEditions[$editionId]))
-            return;
-
-        if ($remoteEditionData['ext'] === self::ARCHIVE_ZIP && !class_exists('\ZipArchive')) {
-            $this->_errorUpdateEditions[$editionId] = "PHP zip extension is required to update csv databases. See https://www.php.net/manual/en/zip.installation.php to install zip php extension.";
+        if (!array_key_exists($editionId, $this->remoteEditions)) {
+            $this->errorUpdateEditions[$editionId] = "The Edition ID: \"{$editionId}\" does not exist or is not currently supported for updating.";
             return;
         }
+        if ($this->getArchiveType($editionId) === self::ARCHIVE_ZIP && !class_exists('\ZipArchive')) {
+            $this->errorUpdateEditions[$editionId] = "PHP zip extension is required to update csv databases. See https://www.php.net/manual/en/zip.installation.php to install zip php extension.";
+            return;
+        }
+        $newFileRequestHeaders = $this->headers($editionId);
+        if (!empty($this->errorUpdateEditions[$editionId]))
+            return;
 
-        $remoteActualVersion = date_create($remoteEditionData['version']);
+        $remoteFileLastModified = date_create($newFileRequestHeaders['last-modified'][0])->getTimestamp();
+        $localFileLastModified = is_file($this->getEditionDirectory($editionId) . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName) ?
+            (int)file_get_contents($this->getEditionDirectory($editionId) . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName) : 0;
 
-        $localEditionData = is_file($this->getEditionDirectory($editionId) . DIRECTORY_SEPARATOR . $this->_lastModifiedStorageFileName) ?
-            file_get_contents($this->getEditionDirectory($editionId) . DIRECTORY_SEPARATOR . $this->_lastModifiedStorageFileName) : '';
+        if ($remoteFileLastModified !== $localFileLastModified) {
 
-        $currentVersion = date_create_from_format('Y-m-d\TH:i:sP',$localEditionData) ?: 0;
-
-        $this->_editionVersions[$editionId] = array(!empty($currentVersion) ? $currentVersion->format('c') : 0,$remoteActualVersion->format('c'));
-
-        if (empty($currentVersion) || $currentVersion != $remoteActualVersion) {
-
-            $this->download($remoteEditionData);
-            if (!empty($this->_errorUpdateEditions[$editionId]))
+            $this->download($editionId);
+            if (!empty($this->errorUpdateEditions[$editionId]))
                 return;
 
-            $this->extract($remoteEditionData);
-            if (!empty($this->_errorUpdateEditions[$editionId]))
+            $this->extract($editionId);
+            if (!empty($this->errorUpdateEditions[$editionId]))
                 return;
 
-            $this->_updated[] = "$editionId has been updated.";
+            file_put_contents($this->getEditionDirectory($editionId) . DIRECTORY_SEPARATOR . $this->lastModifiedStorageFileName, $remoteFileLastModified);
+            $this->updated[] = "$editionId has been updated.";
         } else
-            $this->_updated[] = "$editionId does not need to be updated.";
+            $this->updated[] = "$editionId does not need to be updated.";
+    }
+
+    /**
+     * @param string $editionId
+     * @return string
+     */
+    protected function getRequestUrl($editionId)
+    {
+        return $this->urlApi . '?' . http_build_query(array(
+                'edition_id' => $editionId,
+                'suffix' => $this->getArchiveType($editionId),
+                'license_key' => $this->license_key,
+            ));
+    }
+
+    /**
+     * @param string $editionId
+     * @return string
+     */
+    protected function getArchiveType($editionId)
+    {
+        return $this->remoteTypes[$this->remoteEditions[$editionId]];
+    }
+
+    /**
+     * @param string $editionId
+     * @return string
+     */
+    protected function getArchiveFile($editionId)
+    {
+        return $this->dir . DIRECTORY_SEPARATOR . $editionId . '.' . $this->getArchiveType($editionId);
     }
 
     /**
@@ -208,113 +242,106 @@ class Client
      * @param string $editionId
      * @return array
      */
-    protected function getRemoteEditionData($editionId)
+    protected function headers($editionId)
     {
-        $ch = curl_init(trim($this->_baseUrlApi,'/').'/'.'data'.'?'. http_build_query(array(
-            'id' => $editionId,
-        )));
+        $headers = array();
+        $ch = curl_init($this->getRequestUrl($editionId));
         curl_setopt_array($ch, array(
-            CURLOPT_HEADER => false,
+            CURLOPT_HEADER => true,
+            CURLOPT_NOBODY => true,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_CUSTOMREQUEST => 'POST',
-            CURLOPT_HTTPHEADER => array(
-                'Content-Type: application/json',
-                'Accept: application/json',
-                'X-Api-Key: '.$this->geodbase_update_key,
-            ),
-            CURLOPT_POSTFIELDS => json_encode(array(
-                'maxmind_key' =>$this->license_key,
-                'client' => $this->_client,
-                'client_version' => $this->_client_version,
-            )),
+            CURLOPT_HEADERFUNCTION => function ($curl, $header) use (&$headers) {
+                $headerArray = explode(':', $header, 2);
+                if (count($headerArray) >= 2) // ignore invalid headers
+                    $headers[strtolower(trim($headerArray[0]))][] = trim($headerArray[1]);
+                return strlen($header);
+            }
         ));
-
-        $result = curl_exec($ch);
+        curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
-        if(empty($httpCode)){
-            $this->_errorUpdateEditions[$editionId] = "The remote server is not available.";
-            return array();
+        switch ($httpCode) {
+            case 200:
+                break;
+            case 401:
+                $this->errorUpdateEditions[$editionId] = "Error downloading \"{$editionId}\". Invalid license key.";
+                break;
+            case 403:
+                $this->errorUpdateEditions[$editionId] = "Error downloading \"{$editionId}\". Invalid product ID or subscription expired for \"{$editionId}\".";
+                break;
+            case 404:
+                $this->errorUpdateEditions[$editionId] = "Edition ID: \"{$editionId}\" not found in maxmind.com. The remote server responded with a \"{$httpCode}\" error.";
+                break;
+            case 0:
+                $this->errorUpdateEditions[$editionId] = "Error downloading \"{$editionId}\". The remote server is not available.";
+                break;
+            default:
+                $this->errorUpdateEditions[$editionId] = "Error downloading \"{$editionId}\". The remote server responded with a \"{$httpCode}\" error.";
         }
 
-        $resultArray = json_decode($result,true);
+        if (empty($headers['content-disposition']) && empty($this->errorUpdateEditions[$editionId]))
+            $this->errorUpdateEditions[$editionId] = "Edition ID: \"{$editionId}\" not found in maxmind.com";
 
-        if($httpCode !== 200){
-            $this->_errorUpdateEditions[$editionId] = $resultArray['data']['message'] ?: $resultArray['data']['name'];
+        if (!empty($this->errorUpdateEditions[$editionId]))
             return array();
-        }
-        return $resultArray['data'];
+
+        return $headers;
     }
 
     /**
-     * @param array $remoteEditionData
+     * @param string $editionId
      */
-    protected function download($remoteEditionData)
+    protected function download($editionId)
     {
-        $ch = curl_init(trim($this->_baseUrlApi,'/').'/'.'download'.'?'. http_build_query(array(
-            'request_id' => $remoteEditionData['request_id'],
-        )));
-        $fh = fopen($this->getArchiveFile($remoteEditionData), 'wb');
+        $ch = curl_init($this->getRequestUrl($editionId));
+        $fh = fopen($this->getArchiveFile($editionId), 'wb');
         curl_setopt_array($ch, array(
-            CURLOPT_CUSTOMREQUEST => 'GET',
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTPHEADER => array(
-                'Content-Type: application/json',
-                'X-Api-Key: '.$this->geodbase_update_key,
-            ),
+            CURLOPT_HTTPGET => true,
+            CURLOPT_BINARYTRANSFER => true,
+            CURLOPT_HEADER => false,
             CURLOPT_FILE => $fh,
         ));
         $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
         fclose($fh);
-        if ($response === false || $httpCode !== 200){
-            if(is_file($this->getArchiveFile($remoteEditionData)))
-                unlink($this->getArchiveFile($remoteEditionData));
-            $this->_errorUpdateEditions[$remoteEditionData['id']] = "Download error: ($httpCode)" . curl_error($ch);
-        }
-    }
-
-    protected function getArchiveFile($remoteEditionData)
-    {
-        return $this->dir . DIRECTORY_SEPARATOR . $remoteEditionData['id'] . '.' . $remoteEditionData['ext'];
+        if ($response === false)
+            $this->errorUpdateEditions[$editionId] = "Error download \"{$editionId}\": " . curl_error($ch);
     }
 
     /**
-     * @param array $remoteEditionData
+     * @param string $editionId
      */
-    protected function extract($remoteEditionData)
+    protected function extract($editionId)
     {
-        switch ($remoteEditionData['ext']) {
+        switch ($this->getArchiveType($editionId)) {
             case self::ARCHIVE_GZ:
 
-                $phar = new \PharData($this->getArchiveFile($remoteEditionData));
+                $phar = new \PharData($this->getArchiveFile($editionId));
                 $phar->extractTo($this->dir, null, true);
                 break;
             case self::ARCHIVE_ZIP:
 
                 $zip = new \ZipArchive;
-                $zip->open($this->getArchiveFile($remoteEditionData));
+                $zip->open($this->getArchiveFile($editionId));
                 $zip->extractTo($this->dir);
                 $zip->close();
                 break;
         }
 
-        unlink($this->getArchiveFile($remoteEditionData));
+        unlink($this->getArchiveFile($editionId));
 
-        if (!is_dir($this->getEditionDirectory($remoteEditionData['id'])))
-            mkdir($this->getEditionDirectory($remoteEditionData['id']));
+        if (!is_dir($this->getEditionDirectory($editionId)))
+            mkdir($this->getEditionDirectory($editionId));
 
         $directories = new \DirectoryIterator($this->dir);
         foreach ($directories as $directory)
             /* @var \DirectoryIterator $directory */
-            if ($directory->isDir() && preg_match('/^' . $remoteEditionData['id'] . '[_\d]+$/i', $directory->getBasename())) {
+            if ($directory->isDir() && preg_match('/^' . $editionId . '[_\d]+$/i', $directory->getFilename())) {
                 $newEditionDirectory = new \DirectoryIterator($directory->getPathname());
                 foreach ($newEditionDirectory as $item)
                     if ($item->isFile())
-                        rename($item->getPathname(), $this->getEditionDirectory($remoteEditionData['id']) . DIRECTORY_SEPARATOR . $item->getBasename());
-                file_put_contents($this->getEditionDirectory($remoteEditionData['id']) . DIRECTORY_SEPARATOR . $this->_lastModifiedStorageFileName, $remoteEditionData['version']);
+                        rename($item->getPathname(), $this->getEditionDirectory($editionId) . DIRECTORY_SEPARATOR . $item->getFilename());
                 $this->deleteDirectory($directory->getPathname());
                 break;
             }
