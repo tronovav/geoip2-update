@@ -247,6 +247,7 @@ class Client
         $headers = array();
         $ch = curl_init($this->getRequestUrl($editionId));
         curl_setopt_array($ch, array(
+            CURLOPT_USERAGENT => 'Otpusk.com',
             CURLOPT_HEADER => true,
             CURLOPT_NOBODY => true,
             CURLOPT_RETURNTRANSFER => true,
