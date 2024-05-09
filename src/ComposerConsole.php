@@ -34,6 +34,7 @@ class ComposerConsole extends Client
         $ch = curl_init($this->getRequestUrl($editionId));
         $fh = fopen($this->getArchiveFile($editionId), 'wb');
         curl_setopt_array($ch, array(
+            CURLOPT_USERAGENT => 'Otpusk.com',
             CURLOPT_HTTPGET => true,
             CURLOPT_BINARYTRANSFER => true,
             CURLOPT_HEADER => false,
