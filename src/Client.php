@@ -1,6 +1,6 @@
 <?php
 /*
- * This file is part of tronovav\GeoIP2Update.
+ * This file is part of tomazov\GeoIP2Update.
  *
  * (c) Andrey Tronov
  *
@@ -8,11 +8,11 @@
  * file that was distributed with this source code.
  */
 
-namespace tronovav\GeoIP2Update;
+namespace tomazov\GeoIP2Update;
 
 /**
  * Class Client
- * @package tronovav\GeoIP2Update
+ * @package tomazov\GeoIP2Update
  */
 class Client
 {
@@ -78,7 +78,7 @@ class Client
             if ($thisClass->hasProperty($key) && $thisClass->getProperty($key)->isPublic())
                 $this->$key = $value;
             else
-                $this->errors[] = "The \"{$key}\" parameter does not exist. Just remove it from the options. See https://github.com/tronovav/geoip2-update";
+                $this->errors[] = "The \"{$key}\" parameter does not exist. Just remove it from the options. See https://github.com/tomazov/geoip2-update";
 
         $this->editions = array_unique((array)$this->editions);
     }
@@ -132,7 +132,7 @@ class Client
                 $this->editions = !empty($confParams['EditionIDs']) ? $confParams['EditionIDs'] : $this->editions;
             }
             else{
-                $this->errors[] = 'The geoipConfFile parameter was specified, but the file itself is missing or unreadable. See https://github.com/tronovav/geoip2-update';
+                $this->errors[] = 'The geoipConfFile parameter was specified, but the file itself is missing or unreadable. See https://github.com/tomazov/geoip2-update';
             }
             unset($params['geoipConfFile']);
         }
@@ -153,7 +153,7 @@ class Client
             $this->errors[] = "You must specify your license_key https://support.maxmind.com/account-faq/license-keys/where-do-i-find-my-license-key/";
 
         if (empty($this->editions))
-            $this->errors[] = "No GeoIP revision names are specified for the update. Specify the \"editions\" parameter in the config. See https://github.com/tronovav/geoip2-update";
+            $this->errors[] = "No GeoIP revision names are specified for the update. Specify the \"editions\" parameter in the config. See https://github.com/tomazov/geoip2-update";
 
         if (!empty($this->errors))
             return false;

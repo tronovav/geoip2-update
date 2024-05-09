@@ -1,6 +1,6 @@
 <?php
 /*
- * This file is part of tronovav\GeoIP2Update.
+ * This file is part of tomazov\GeoIP2Update.
  *
  * (c) Andrey Tronov
  *
@@ -8,7 +8,7 @@
  * file that was distributed with this source code.
  */
 
-namespace tronovav\GeoIP2Update;
+namespace tomazov\GeoIP2Update;
 
 /**
  * These libraries are included in the Composer assembly
