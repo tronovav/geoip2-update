@@ -10,15 +10,6 @@
     ],
     "type": "library",
     "license": "MIT",
-    "authors": [
-        {
-            "name": "Andrey Tronov",
-            "email": "newtronov@gmail.com"
-        }
-    ],
-    "support": {
-        "email": "newtronov@gmail.com"
-    },
     "require": {
         "php": ">=5.3",
         "ext-curl": "*",
